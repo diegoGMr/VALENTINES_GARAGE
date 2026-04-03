@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.composableComponents.auth
+package com.msn.valentinesgarage.activities.authenticationActivity.composables
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height

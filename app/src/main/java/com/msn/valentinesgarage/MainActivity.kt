@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.msn.valentinesgarage.activities.LoginActivity
+import com.msn.valentinesgarage.activities.authenticationActivity.LoginActivity
 import com.msn.valentinesgarage.theme.ValentinesGarageTheme
 
 class MainActivity : ComponentActivity() {

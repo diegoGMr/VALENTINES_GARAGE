@@ -54,6 +54,12 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
+    // Font Awesome icons for Compose
+    implementation(libs.compose.icons.font.awesome)
+
+    // Image loading
+    implementation(libs.coil.compose)
+
     // Unit Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

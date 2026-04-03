@@ -1,5 +1,6 @@
-package com.msn.valentinesgarage.activities
+package com.msn.valentinesgarage.activities.authenticationActivity
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,14 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.msn.valentinesgarage.composableComponents.auth.AuthFooterLink
-import com.msn.valentinesgarage.composableComponents.auth.AuthPrimaryButton
-import com.msn.valentinesgarage.composableComponents.auth.AuthScreenTitle
-import com.msn.valentinesgarage.composableComponents.auth.AuthTextField
-import com.msn.valentinesgarage.composableComponents.auth.BrandLogo
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthFooterLink
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthPrimaryButton
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthScreenTitle
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthTextField
+import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
@@ -46,7 +48,10 @@ fun SignUpActivity(
         ) {
             Spacer(modifier = Modifier.height(80.dp))
 
-            BrandLogo()
+            Image(
+                painter = painterResource(id = R.drawable.applogo),
+                contentDescription = "App logo",
+            )
 
             Spacer(modifier = Modifier.height(52.dp))
 

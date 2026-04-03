@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.composableComponents.auth
+package com.msn.valentinesgarage.activities.authenticationActivity.composables
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +44,7 @@ fun AuthTextField(
             focusedContainerColor   = AppColors.White, // for now
             unfocusedContainerColor = AppColors.White, // for now
             focusedBorderColor      = AppColors.Orange,
-            unfocusedBorderColor    = AppColors.NearBlack,
+            unfocusedBorderColor    = AppColors.LightGray,
             cursorColor             = AppColors.Orange,
             focusedTextColor        = AppColors.FontBlackMedium,
             unfocusedTextColor      = AppColors.FontBlackMedium,

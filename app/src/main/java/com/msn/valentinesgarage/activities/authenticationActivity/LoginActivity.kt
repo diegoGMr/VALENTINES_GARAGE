@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities
+package com.msn.valentinesgarage.activities.authenticationActivity
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,11 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.msn.valentinesgarage.composableComponents.auth.AuthFooterLink
-import com.msn.valentinesgarage.composableComponents.auth.AuthPrimaryButton
-import com.msn.valentinesgarage.composableComponents.auth.AuthScreenTitle
-import com.msn.valentinesgarage.composableComponents.auth.AuthTextField
-import com.msn.valentinesgarage.composableComponents.auth.BrandLogo
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthFooterLink
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthPrimaryButton
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthScreenTitle
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthTextField
+import com.msn.valentinesgarage.activities.authenticationActivity.composables.BrandLogo
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
