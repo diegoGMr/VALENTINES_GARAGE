@@ -44,7 +44,7 @@ enum class HomeBottomTab(
     Settings(title = "Settings", icon = FontAwesomeIcons.Solid.Cog),
 }
 
-private enum class HomeDashboard {
+private enum class HomeScreenDestination {
     Dashboard,
     VehicleInformation,
     Settings,
@@ -64,7 +64,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
-    var currentScreen by remember { mutableStateOf(HomeDashboard.Dashboard) }
+    var currentScreen by remember { mutableStateOf(HomeScreenDestination.Dashboard) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -77,8 +77,8 @@ fun HomeScreen(
                         onClick = {
                             selectedTab = tab
                             currentScreen = when (tab) {
-                                HomeBottomTab.Home -> HomeDashboard.Dashboard
-                                HomeBottomTab.Settings -> HomeDashboard.Settings
+                                HomeBottomTab.Home -> HomeScreenDestination.Dashboard
+                                HomeBottomTab.Settings -> HomeScreenDestination.Settings
                                 else -> currentScreen
                             }
                         },
@@ -102,7 +102,7 @@ fun HomeScreen(
         },
     ) { innerPadding ->
         when (currentScreen) {
-            HomeDashboard.Dashboard -> {
+            HomeScreenDestination.Dashboard -> {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -135,7 +135,7 @@ fun HomeScreen(
                             dateText = vehicle.dateText,
                             pendingTasksText = vehicle.pendingTasksText,
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            onClick = { currentScreen = HomeDashboard.VehicleInformation },
+                            onClick = { currentScreen = HomeScreenDestination.VehicleInformation },
                         )
                     }
 
@@ -148,7 +148,7 @@ fun HomeScreen(
                 }
             }
 
-            HomeDashboard.VehicleInformation -> {
+            HomeScreenDestination.VehicleInformation -> {
                 VehicleInformationScreen(
                     modifier = Modifier
                         .fillMaxSize()
@@ -156,7 +156,7 @@ fun HomeScreen(
                 )
             }
 
-            HomeDashboard.Settings -> {
+            HomeScreenDestination.Settings -> {
                 SettingsScreen(
                     modifier = Modifier
                         .fillMaxSize()
