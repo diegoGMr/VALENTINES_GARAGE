@@ -8,32 +8,47 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthFooterLink
 import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthPrimaryButton
 import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthScreenTitle
 import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthTextField
+import com.msn.valentinesgarage.activities.authenticationActivity.viewmodels.SignUpViewModel
 import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
 fun SignUpActivity(
-    onSignupClick: (email: String, password: String, confirmPassword: String) -> Unit = { _, _, _ -> },
     onLogin: () -> Unit = {},
+    signUpViewModel: SignUpViewModel = viewModel(),
 ) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    val uiState by signUpViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.success) {
+        if (uiState.success) {
+            signUpViewModel.resetState()
+            onLogin()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -60,6 +75,14 @@ fun SignUpActivity(
             Spacer(modifier = Modifier.height(20.dp))
 
             AuthTextField(
+                value = name,
+                onValueChange = { name = it },
+                placeholder = "Full name",
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            AuthTextField(
                 value = email,
                 onValueChange = { email = it },
                 placeholder = "Email",
@@ -84,11 +107,24 @@ fun SignUpActivity(
                 isPassword = true,
             )
 
+            if (uiState.error != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = uiState.error!!,
+                    color = AppColors.Red,
+                    fontSize = 13.sp,
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             AuthPrimaryButton(
-                text = "SIGNUP",
-                onClick = { onSignupClick(email, password, confirmPassword) },
+                text = if (uiState.isLoading) "SIGNING UP..." else "SIGNUP",
+                onClick = {
+                    if (!uiState.isLoading) {
+                        signUpViewModel.register(name, email, password, confirmPassword)
+                    }
+                },
             )
         }
 
