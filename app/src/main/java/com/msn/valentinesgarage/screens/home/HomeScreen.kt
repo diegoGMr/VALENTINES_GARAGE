@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.homeActivity
+package com.msn.valentinesgarage.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,10 +22,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.msn.valentinesgarage.R
-import com.msn.valentinesgarage.activities.homeActivity.composables.HomeHeaderBanner
-import com.msn.valentinesgarage.activities.homeActivity.composables.HomeVehicleTaskCard
-import com.msn.valentinesgarage.activities.homeActivity.composables.SectionLabel
-import com.msn.valentinesgarage.activities.settingsActivity.SettingsActivity
+import com.msn.valentinesgarage.screens.home.composables.HomeHeaderBanner
+import com.msn.valentinesgarage.screens.home.composables.HomeVehicleTaskCard
+import com.msn.valentinesgarage.screens.home.composables.SectionLabel
+import com.msn.valentinesgarage.screens.settings.SettingsScreen
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
@@ -44,7 +44,7 @@ enum class HomeBottomTab(
     Settings(title = "Settings", icon = FontAwesomeIcons.Solid.Cog),
 }
 
-private enum class HomeScreen {
+private enum class HomeScreenDestination {
     Dashboard,
     VehicleInformation,
     Settings,
@@ -60,11 +60,11 @@ data class VehicleCardUi(
 )
 
 @Composable
-fun HomeActivity(
+fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
-    var currentScreen by remember { mutableStateOf(HomeScreen.Dashboard) }
+    var currentScreen by remember { mutableStateOf(HomeScreenDestination.Dashboard) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -77,8 +77,8 @@ fun HomeActivity(
                         onClick = {
                             selectedTab = tab
                             currentScreen = when (tab) {
-                                HomeBottomTab.Home -> HomeScreen.Dashboard
-                                HomeBottomTab.Settings -> HomeScreen.Settings
+                                HomeBottomTab.Home -> HomeScreenDestination.Dashboard
+                                HomeBottomTab.Settings -> HomeScreenDestination.Settings
                                 else -> currentScreen
                             }
                         },
@@ -102,7 +102,7 @@ fun HomeActivity(
         },
     ) { innerPadding ->
         when (currentScreen) {
-            HomeScreen.Dashboard -> {
+            HomeScreenDestination.Dashboard -> {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -135,7 +135,7 @@ fun HomeActivity(
                             dateText = vehicle.dateText,
                             pendingTasksText = vehicle.pendingTasksText,
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            onClick = { currentScreen = HomeScreen.VehicleInformation },
+                            onClick = { currentScreen = HomeScreenDestination.VehicleInformation },
                         )
                     }
 
@@ -148,16 +148,16 @@ fun HomeActivity(
                 }
             }
 
-            HomeScreen.VehicleInformation -> {
-                VehicleInformationActivity(
+            HomeScreenDestination.VehicleInformation -> {
+                VehicleInformationScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = innerPadding.calculateBottomPadding()),
                 )
             }
 
-            HomeScreen.Settings -> {
-                SettingsActivity(
+            HomeScreenDestination.Settings -> {
+                SettingsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = innerPadding.calculateBottomPadding()),
@@ -196,6 +196,6 @@ private val sampleVehicleCards = listOf(
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
-private fun HomeActivityPreview() {
-    HomeActivity()
+private fun HomeScreenPreview() {
+    HomeScreen()
 }

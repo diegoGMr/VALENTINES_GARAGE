@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.authenticationActivity
+package com.msn.valentinesgarage.screens.authentication
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,12 +11,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.msn.valentinesgarage.activities.authenticationActivity.composables.*
-import com.msn.valentinesgarage.activities.authenticationActivity.viewmodels.LoginViewModel
+import com.msn.valentinesgarage.screens.authentication.composables.*
+import com.msn.valentinesgarage.screens.authentication.viewmodels.LoginViewModel
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
-fun LoginActivity(
+fun LoginScreen(
     onLoginSuccess: (token: String, userId: Int, role: String) -> Unit = { _, _, _ -> },
     onCreateAccount: () -> Unit = {},
     loginViewModel: LoginViewModel = viewModel(),
@@ -91,6 +91,6 @@ fun LoginActivity(
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
-fun PreviewLoginActivity() {
-    LoginActivity()
+fun PreviewLoginScreen() {
+    LoginScreen()
 }

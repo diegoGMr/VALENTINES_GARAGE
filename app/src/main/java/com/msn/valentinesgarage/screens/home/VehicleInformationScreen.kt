@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.homeActivity
+package com.msn.valentinesgarage.screens.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,10 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.msn.valentinesgarage.R
-import com.msn.valentinesgarage.activities.homeActivity.composables.InformationCard
-import com.msn.valentinesgarage.activities.homeActivity.composables.IssueTaskCard
-import com.msn.valentinesgarage.activities.homeActivity.composables.MechanicCard
-import com.msn.valentinesgarage.activities.homeActivity.composables.SectionHeaderRow
+import com.msn.valentinesgarage.screens.home.composables.InformationCard
+import com.msn.valentinesgarage.screens.home.composables.IssueTaskCard
+import com.msn.valentinesgarage.screens.home.composables.MechanicCard
+import com.msn.valentinesgarage.screens.home.composables.SectionHeaderRow
 import com.msn.valentinesgarage.theme.AppColors
 
 private data class VehicleInfoField(
@@ -56,7 +56,7 @@ private data class IssueUi(
 )
 
 @Composable
-fun VehicleInformationActivity(
+fun VehicleInformationScreen(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -237,6 +237,6 @@ private val sampleIssues = listOf(
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
-private fun VehicleInformationActivityPreview() {
-    VehicleInformationActivity()
+private fun VehicleInformationScreenPreview() {
+    VehicleInformationScreen()
 }
