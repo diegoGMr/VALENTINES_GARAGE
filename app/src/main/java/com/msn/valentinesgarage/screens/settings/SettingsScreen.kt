@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.settingsActivity
+package com.msn.valentinesgarage.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.msn.valentinesgarage.R
-import com.msn.valentinesgarage.activities.homeActivity.composables.SectionLabel
-import com.msn.valentinesgarage.activities.settingsActivity.composables.ProfileCard
+import com.msn.valentinesgarage.screens.home.composables.SectionLabel
+import com.msn.valentinesgarage.screens.settings.composables.ProfileCard
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ChevronLeft
@@ -44,7 +44,7 @@ import compose.icons.fontawesomeicons.solid.ChevronDown
 import compose.icons.fontawesomeicons.solid.ChevronRight
 
 @Composable
-fun SettingsActivity(
+fun SettingsScreen(
     modifier: Modifier = Modifier,
 ){
     var isDarkTheme by remember { mutableStateOf(false) }
@@ -270,6 +270,6 @@ private fun SupportRowItem(
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
-fun SettingsActivityPreview(){
-    SettingsActivity()
+fun SettingsScreenPreview(){
+    SettingsScreen()
 }

@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.homeActivity.composables
+package com.msn.valentinesgarage.screens.home.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

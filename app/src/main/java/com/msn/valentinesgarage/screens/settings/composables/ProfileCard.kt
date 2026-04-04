@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.settingsActivity.composables
+package com.msn.valentinesgarage.screens.settings.composables
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

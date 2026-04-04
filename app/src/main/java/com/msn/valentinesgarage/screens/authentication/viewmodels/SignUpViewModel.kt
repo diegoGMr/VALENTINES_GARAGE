@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.authenticationActivity.viewmodels
+package com.msn.valentinesgarage.screens.authentication.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

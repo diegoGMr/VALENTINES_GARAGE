@@ -1,4 +1,4 @@
-package com.msn.valentinesgarage.activities.authenticationActivity
+package com.msn.valentinesgarage.screens.authentication
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,16 +24,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthFooterLink
-import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthPrimaryButton
-import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthScreenTitle
-import com.msn.valentinesgarage.activities.authenticationActivity.composables.AuthTextField
-import com.msn.valentinesgarage.activities.authenticationActivity.viewmodels.SignUpViewModel
+import com.msn.valentinesgarage.screens.authentication.composables.AuthFooterLink
+import com.msn.valentinesgarage.screens.authentication.composables.AuthPrimaryButton
+import com.msn.valentinesgarage.screens.authentication.composables.AuthScreenTitle
+import com.msn.valentinesgarage.screens.authentication.composables.AuthTextField
+import com.msn.valentinesgarage.screens.authentication.viewmodels.SignUpViewModel
 import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
-fun SignUpActivity(
+fun SignUpScreen(
     onLogin: () -> Unit = {},
     signUpViewModel: SignUpViewModel = viewModel(),
 ) {
@@ -142,5 +142,5 @@ fun SignUpActivity(
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
 fun PreviewCreateAccountScreen() {
-    SignUpActivity()
+    SignUpScreen()
 }
