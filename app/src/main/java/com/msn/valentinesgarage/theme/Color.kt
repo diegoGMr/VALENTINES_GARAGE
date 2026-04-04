@@ -7,6 +7,7 @@ object AppColors {
 	val LightNearBlack = Color(0xFF3E383B)
 	val LightGray = Color(0xFFD3D3D3)
 	val Orange = Color(0xFFFAB001)
+	val OrangeWhite = Color(0xFFFFF3DB)
 	val NearBlack = Color(0xFF1F1D1E)
 	val Pink = Color(0xFFEC878B)
 	val Red = Color(0xFFFE2938)
