@@ -20,11 +20,16 @@ fun AuthPrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
+        enabled = isEnabled,
         shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Orange),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AppColors.Orange,
+            disabledContainerColor = AppColors.Orange.copy(alpha = 0.5f),
+        ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
         modifier = modifier
             .fillMaxWidth()
@@ -32,7 +37,7 @@ fun AuthPrimaryButton(
     ) {
         Text(
             text = text,
-            color = Color.White,
+            color = if (isEnabled) Color.White else Color.White.copy(alpha = 0.6f),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.5.sp,

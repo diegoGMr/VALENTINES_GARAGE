@@ -2,34 +2,45 @@ package com.msn.valentinesgarage.screens.authentication
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.screens.authentication.composables.AuthFooterLink
 import com.msn.valentinesgarage.screens.authentication.composables.AuthPrimaryButton
 import com.msn.valentinesgarage.screens.authentication.composables.AuthScreenTitle
 import com.msn.valentinesgarage.screens.authentication.composables.AuthTextField
 import com.msn.valentinesgarage.screens.authentication.viewmodels.SignUpViewModel
-import com.msn.valentinesgarage.R
+import com.msn.valentinesgarage.screens.dialog.DialogScreen
+import com.msn.valentinesgarage.screens.dialog.DialogType
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
@@ -37,105 +48,186 @@ fun SignUpScreen(
     onLogin: () -> Unit = {},
     signUpViewModel: SignUpViewModel = viewModel(),
 ) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     val uiState by signUpViewModel.uiState.collectAsState()
+    val fullNameError = signUpViewModel.fullNameError()
+    val emailError = signUpViewModel.emailError()
+    val passwordError = signUpViewModel.passwordError()
+    val confirmError = signUpViewModel.confirmPasswordError()
+    val termsError = if (uiState.hasSubmitted && !uiState.agreedToTerms) "Please agree to terms and conditions" else null
 
-    LaunchedEffect(uiState.success) {
-        if (uiState.success) {
-            signUpViewModel.resetState()
-            onLogin()
-        }
+    val showTermsScreen = remember { mutableStateOf(false) }
+
+    if (showTermsScreen.value) {
+        TermsConditionsScreen(
+            onBack = { showTermsScreen.value = false },
+            onAgree = {
+                signUpViewModel.onAgreedToTermsChanged(true)
+                showTermsScreen.value = false
+            },
+        )
+        return
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.White),
+            .background(AppColors.Orange),
     ) {
-        Column(
+
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .fillMaxWidth()
+                .height(250.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = AppColors.White,
+                modifier = Modifier.size(50.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(id = R.drawable.applogo),
+                        contentDescription = "Brand Logo",
+                        modifier = Modifier.size(56.dp, 44.dp),
+                    )
+                }
+            }
+        }
 
-            Image(
-                painter = painterResource(id = R.drawable.applogo),
-                contentDescription = "App logo",
-            )
+        Surface(
+            color = AppColors.White,
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            modifier = Modifier.fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .fillMaxHeight(0.75f),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 28.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
+            ) {
+                AuthScreenTitle(text = "Create your account")
+                Spacer(modifier = Modifier.height(40.dp))
 
-            Spacer(modifier = Modifier.height(52.dp))
+                AuthTextField(
+                    value = uiState.fullName,
+                    onValueChange = signUpViewModel::onFullNameChanged,
+                    onFocusChanged = signUpViewModel::onFullNameFocusChanged,
+                    placeholder = "Full name",
+                    isError = fullNameError != null,
+                    errorText = fullNameError,
+                )
 
-            AuthScreenTitle(text = "Create your account")
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+                AuthTextField(
+                    value = uiState.email,
+                    onValueChange = signUpViewModel::onEmailChanged,
+                    onFocusChanged = signUpViewModel::onEmailFocusChanged,
+                    placeholder = "Email",
+                    keyboardType = KeyboardType.Email,
+                    isError = emailError != null,
+                    errorText = emailError,
+                )
 
-            AuthTextField(
-                value = name,
-                onValueChange = { name = it },
-                placeholder = "Full name",
-            )
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
+                AuthTextField(
+                    value = uiState.password,
+                    onValueChange = signUpViewModel::onPasswordChanged,
+                    onFocusChanged = signUpViewModel::onPasswordFocusChanged,
+                    placeholder = "Password",
+                    isPassword = true,
+                    isError = passwordError != null,
+                    errorText = passwordError,
+                )
 
-            AuthTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "Email",
-                keyboardType = KeyboardType.Email,
-            )
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
+                AuthTextField(
+                    value = uiState.confirmPassword,
+                    onValueChange = signUpViewModel::onConfirmPasswordChanged,
+                    onFocusChanged = signUpViewModel::onConfirmPasswordFocusChanged,
+                    placeholder = "Confirm Password",
+                    isPassword = true,
+                    isError = confirmError != null,
+                    errorText = confirmError,
+                )
 
-            AuthTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "Password",
-                isPassword = true,
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            AuthTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                placeholder = "Confirm Password",
-                isPassword = true,
-            )
-
-            if (uiState.error != null) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = uiState.error!!,
-                    color = AppColors.Red,
-                    fontSize = 13.sp,
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = uiState.agreedToTerms,
+                        onCheckedChange = null,
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = AppColors.Orange,
+                            uncheckedColor = AppColors.LightGray,
+                            checkmarkColor = AppColors.White,
+                        ),
+                    )
+                    Text(
+                        text = "I agree to Terms & Conditions",
+                        fontSize = 13.sp,
+                        color = AppColors.FontBlackMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { showTermsScreen.value = true },
+                    )
+                }
+
+                if (termsError != null) {
+                    Text(
+                        text = termsError,
+                        color = AppColors.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                AuthPrimaryButton(
+                    text = if (uiState.isLoading) "SIGNING UP..." else "SIGNUP",
+                        isEnabled = !uiState.isLoading && signUpViewModel.isFormValid(),
+                    onClick = {
+                            if (!uiState.isLoading && signUpViewModel.isFormValid()) {
+                            signUpViewModel.register()
+                        }
+                    },
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                AuthFooterLink(
+                    prompt = "Already have an account?  ",
+                    linkText = "login",
+                    onLinkClick = onLogin,
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(20.dp))
 
-            AuthPrimaryButton(
-                text = if (uiState.isLoading) "SIGNING UP..." else "SIGNUP",
-                onClick = {
-                    if (!uiState.isLoading) {
-                        signUpViewModel.register(name, email, password, confirmPassword)
+        uiState.activeDialog?.let { dialogType ->
+            DialogScreen(
+                dialogType = dialogType,
+                onDismiss = {
+                    signUpViewModel.dismissDialog()
+                    if (dialogType is DialogType.Success) {
+                        signUpViewModel.resetState()
+                        onLogin()
                     }
                 },
             )
         }
-
-        AuthFooterLink(
-            prompt = "Already have an account?  ",
-            linkText = "login",
-            onLinkClick = onLogin,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp),
-        )
     }
 }
 

@@ -37,7 +37,7 @@ fun AuthFooterLink(
         ) {
             Text(
                 text = linkText,
-                color = AppColors.FontBlackMedium,
+                color = AppColors.Orange,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -49,7 +49,7 @@ fun AuthFooterLink(
 @Composable
 fun PreviewAuthFooterLink() {
     AuthFooterLink(
-        prompt = "Don't have an account?  ",
+        prompt = "Don't have an account? ",
         linkText = "create account",
         onLinkClick = {},
     )

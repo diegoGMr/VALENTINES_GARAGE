@@ -1,18 +1,37 @@
 package com.msn.valentinesgarage.screens.authentication
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.msn.valentinesgarage.screens.authentication.composables.*
+import com.msn.valentinesgarage.R
+import com.msn.valentinesgarage.screens.authentication.composables.AuthFooterLink
+import com.msn.valentinesgarage.screens.authentication.composables.AuthPrimaryButton
+import com.msn.valentinesgarage.screens.authentication.composables.AuthScreenTitle
+import com.msn.valentinesgarage.screens.authentication.composables.AuthTextField
 import com.msn.valentinesgarage.screens.authentication.viewmodels.LoginViewModel
+import com.msn.valentinesgarage.screens.dialog.DialogScreen
 import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
@@ -21,71 +40,112 @@ fun LoginScreen(
     onCreateAccount: () -> Unit = {},
     loginViewModel: LoginViewModel = viewModel(),
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     val uiState by loginViewModel.uiState.collectAsState()
+    val emailError = loginViewModel.emailError()
+    val passwordError = loginViewModel.passwordError()
 
-    // Navigate on success
     LaunchedEffect(uiState.token) {
-        if (uiState.token != null) {
-            onLoginSuccess(uiState.token!!, uiState.userId!!, uiState.role!!)
+        val token = uiState.token
+        val id = uiState.userId
+        val role = uiState.role
+        if (token != null && id != null && role != null) {
+            onLoginSuccess(token, id, role)
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.White),
+            .background(AppColors.Orange),
     ) {
-        Column(
+
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .fillMaxWidth()
+                .height(250.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
-            BrandLogo()
-            Spacer(modifier = Modifier.height(52.dp))
-            AuthScreenTitle(text = "Login to your account")
-            Spacer(modifier = Modifier.height(20.dp))
-            AuthTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "Email",
-                keyboardType = KeyboardType.Email,
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            AuthTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "Password",
-                isPassword = true,
-            )
-            // Error message
-            if (uiState.error != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = uiState.error!!,
-                    color = AppColors.Red,
-                    fontSize = 13.sp,
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = AppColors.White,
+                modifier = Modifier.size(50.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(id = R.drawable.applogo),
+                        contentDescription = "Brand Logo",
+                        modifier = Modifier.size(56.dp, 44.dp),
+                    )
+                }
+            }
+        }
+
+        Surface(
+            color = AppColors.White,
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(.75f)
+                .align(Alignment.BottomCenter),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 28.dp, vertical = 30.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
+            ) {
+                AuthScreenTitle(text = "Login to your account")
+                Spacer(modifier = Modifier.height(40.dp))
+
+                AuthTextField(
+                    value = uiState.email,
+                    onValueChange = loginViewModel::onEmailChanged,
+                    onFocusChanged = loginViewModel::onEmailFocusChanged,
+                    placeholder = "Email",
+                    keyboardType = KeyboardType.Email,
+                    isError = emailError != null,
+                    errorText = emailError,
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AuthTextField(
+                    value = uiState.password,
+                    onValueChange = loginViewModel::onPasswordChanged,
+                    onFocusChanged = loginViewModel::onPasswordFocusChanged,
+                    placeholder = "Password",
+                    isPassword = true,
+                    isError = passwordError != null,
+                    errorText = passwordError,
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                AuthPrimaryButton(
+                    text = if (uiState.isLoading) "LOGGING IN..." else "LOGIN",
+                    isEnabled = !uiState.isLoading && loginViewModel.isFormValid(),
+                    onClick = {
+                        if (!uiState.isLoading && loginViewModel.isFormValid()) {
+                            loginViewModel.login()
+                        }
+                    },
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                AuthFooterLink(
+                    prompt = "Don't have an account? ",
+                    linkText = "create account",
+                    onLinkClick = onCreateAccount,
+                    modifier = Modifier.padding(bottom = 12.dp),
                 )
             }
-            Spacer(modifier = Modifier.height(36.dp))
-            AuthPrimaryButton(
-                text = if (uiState.isLoading) "LOGGING IN..." else "LOGIN",
-                onClick = {
-                    if (!uiState.isLoading) loginViewModel.login(email, password)
-                },
-            )
         }
-        AuthFooterLink(
-            prompt = "Don't have an account?  ",
-            linkText = "create account",
-            onLinkClick = onCreateAccount,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp),
-        )
+
+        uiState.activeDialog?.let { dialogType ->
+            DialogScreen(dialogType = dialogType, onDismiss = loginViewModel::dismissDialog)
+        }
     }
 }
 
