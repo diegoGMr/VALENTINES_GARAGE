@@ -11,9 +11,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.msn.valentinesgarage.screens.authentication.LoginScreen
-import com.msn.valentinesgarage.screens.authentication.SignUpScreen
-import com.msn.valentinesgarage.screens.home.HomeScreen
+import com.msn.valentinesgarage.activities.authenticationActivity.LoginActivity
+import com.msn.valentinesgarage.activities.authenticationActivity.SignUpActivity
+import com.msn.valentinesgarage.activities.homeActivity.HomeActivity
 import com.msn.valentinesgarage.theme.ValentinesGarageTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,9 +29,9 @@ class MainActivity : ComponentActivity() {
                     var userRole by remember { mutableStateOf<String?>(null) }
 
                     when (currentScreen) {
-                        "home" -> HomeScreen(modifier = Modifier.fillMaxSize())
-                        "signup" -> SignUpScreen(onLogin = { currentScreen = "login" })
-                        "login" -> LoginScreen(
+                        "home" -> HomeActivity(modifier = Modifier.fillMaxSize())
+                        "signup" -> SignUpActivity(onLogin = { currentScreen = "login" })
+                        "login" -> LoginActivity(
                             onLoginSuccess = { token, id, role ->
                                 authToken = token
                                 userId = id
