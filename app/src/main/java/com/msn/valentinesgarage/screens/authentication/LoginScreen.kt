@@ -36,6 +36,7 @@ import com.msn.valentinesgarage.theme.AppColors
 
 @Composable
 fun LoginScreen(
+    shouldCallLoginApi: Boolean = true,
     onLoginSuccess: (token: String, userId: Int, role: String) -> Unit = { _, _, _ -> },
     onCreateAccount: () -> Unit = {},
     loginViewModel: LoginViewModel = viewModel(),
@@ -127,7 +128,15 @@ fun LoginScreen(
                     isEnabled = !uiState.isLoading && loginViewModel.isFormValid(),
                     onClick = {
                         if (!uiState.isLoading && loginViewModel.isFormValid()) {
-                            loginViewModel.login()
+                            if (shouldCallLoginApi) {
+                                loginViewModel.login()
+                            } else {
+                                onLoginSuccess(
+                                    "dev-token",
+                                    1,
+                                    "mechanic",
+                                )
+                            }
                         }
                     },
                 )

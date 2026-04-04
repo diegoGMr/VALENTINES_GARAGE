@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.screens.home.composables.InformationCard
 import com.msn.valentinesgarage.screens.home.composables.IssueTaskCard
 import com.msn.valentinesgarage.screens.home.composables.MechanicCard
+import com.msn.valentinesgarage.screens.home.composables.MoreIssuesCard
 import com.msn.valentinesgarage.screens.home.composables.SectionHeaderRow
 import com.msn.valentinesgarage.theme.AppColors
 
@@ -51,14 +53,27 @@ private data class IssueUi(
     val id: String,
     val title: String,
     val subtitle: String,
-    val priority: String,
-    val isOpen: Boolean,
+    val severity: String,
+    val taskCount: Int,
 )
+
+private val issueImageUrls = listOf(
+    "https://i.pinimg.com/1200x/f5/ff/28/f5ff28479532dafbc506ba7bcf3ff40d.jpg",
+    "https://i.pinimg.com/1200x/e0/ed/58/e0ed587bf26df8ede3d77d20ed6c7b39.jpg",
+)
+
+private fun imageForIssue(issueId: String): String {
+    val safeIndex = kotlin.math.abs(issueId.hashCode()) % issueImageUrls.size
+    return issueImageUrls[safeIndex]
+}
 
 @Composable
 fun VehicleInformationScreen(
     modifier: Modifier = Modifier,
 ) {
+    val severeIssues = sampleIssues.filter { it.severity == "Severe" }
+    val mildIssues = sampleIssues.filter { it.severity == "Mild" }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize(),
@@ -146,14 +161,58 @@ fun VehicleInformationScreen(
             )
         }
 
-        items(items = sampleIssues, key = { it.id }) { issue ->
-            IssueTaskCard(
-                title = issue.title,
-                subtitle = issue.subtitle,
-                priority = issue.priority,
-                isOpen = issue.isOpen,
-                modifier = Modifier.padding(horizontal = 16.dp),
+        item(key = "severe_issues_subsection") {
+            IssueSeveritySubsection(
+                title = "Severe",
+                issues = severeIssues,
             )
+        }
+
+        item(key = "mild_issues_subsection") {
+            IssueSeveritySubsection(
+                title = "Mild",
+                issues = mildIssues,
+            )
+        }
+    }
+}
+
+@Composable
+private fun IssueSeveritySubsection(
+    title: String,
+    issues: List<IssueUi>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        SectionHeaderRow(
+            title = title,
+            actionText = "See more",
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(items = issues.take(3), key = { it.id }) { issue ->
+                IssueTaskCard(
+                    imageUrl = imageForIssue(issue.id),
+                    title = issue.title,
+                    subtitle = issue.subtitle,
+                    taskCount = issue.taskCount,
+                    modifier = Modifier.width(220.dp),
+                )
+            }
+
+            item {
+                MoreIssuesCard(
+                    remainingCount = (issues.size - 3).coerceAtLeast(0),
+                    modifier = Modifier.width(220.dp),
+                )
+            }
         }
     }
 }
@@ -216,22 +275,50 @@ private val sampleIssues = listOf(
         id = "1",
         title = "Engine warning light",
         subtitle = "Diagnostic scan required before dispatch.",
-        priority = "High priority",
-        isOpen = true,
+        severity = "Severe",
+        taskCount = 4,
     ),
     IssueUi(
         id = "2",
         title = "Rear brake pad wear",
         subtitle = "Parts available. Schedule replacement this week.",
-        priority = "Medium priority",
-        isOpen = true,
+        severity = "Mild",
+        taskCount = 2,
     ),
     IssueUi(
         id = "3",
         title = "Cabin filter replaced",
         subtitle = "Completed during last preventive maintenance.",
-        priority = "Maintenance",
-        isOpen = false,
+        severity = "Mild",
+        taskCount = 1,
+    ),
+    IssueUi(
+        id = "4",
+        title = "Steering alignment drift",
+        subtitle = "Requires calibration after suspension service.",
+        severity = "Mild",
+        taskCount = 3,
+    ),
+    IssueUi(
+        id = "5",
+        title = "Coolant level alert",
+        subtitle = "Sensor reads intermittent low coolant warnings.",
+        severity = "Severe",
+        taskCount = 2,
+    ),
+    IssueUi(
+        id = "6",
+        title = "Brake pressure warning",
+        subtitle = "ABS and brake line pressure need urgent checks.",
+        severity = "Severe",
+        taskCount = 5,
+    ),
+    IssueUi(
+        id = "7",
+        title = "Cabin vibration report",
+        subtitle = "Driver noted mild vibration at idle speed.",
+        severity = "Mild",
+        taskCount = 2,
     ),
 )
 

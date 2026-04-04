@@ -26,6 +26,7 @@ import com.msn.valentinesgarage.screens.home.composables.HomeHeaderBanner
 import com.msn.valentinesgarage.screens.home.composables.HomeVehicleTaskCard
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.screens.settings.SettingsScreen
+import com.msn.valentinesgarage.screens.tasks.TasksScreen
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
@@ -46,6 +47,7 @@ enum class HomeBottomTab(
 
 private enum class HomeScreenDestination {
     Dashboard,
+    Tasks,
     VehicleInformation,
     Settings,
 }
@@ -78,6 +80,7 @@ fun HomeScreen(
                             selectedTab = tab
                             currentScreen = when (tab) {
                                 HomeBottomTab.Home -> HomeScreenDestination.Dashboard
+                                HomeBottomTab.Tasks -> HomeScreenDestination.Tasks
                                 HomeBottomTab.Settings -> HomeScreenDestination.Settings
                                 else -> currentScreen
                             }
@@ -150,6 +153,14 @@ fun HomeScreen(
 
             HomeScreenDestination.VehicleInformation -> {
                 VehicleInformationScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = innerPadding.calculateBottomPadding()),
+                )
+            }
+
+            HomeScreenDestination.Tasks -> {
+                TasksScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = innerPadding.calculateBottomPadding()),

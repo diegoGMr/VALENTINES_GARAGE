@@ -10,19 +10,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,9 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.theme.AppColors
-import compose.icons.FontAwesomeIcons
-import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.ChevronRight
+import coil.compose.AsyncImage
 
 @Composable
 fun InformationCard(
@@ -126,10 +125,10 @@ fun SectionHeaderRow(
 
 @Composable
 fun IssueTaskCard(
+    imageUrl: String,
     title: String,
     subtitle: String,
-    priority: String,
-    isOpen: Boolean,
+    taskCount: Int,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -143,24 +142,22 @@ fun IssueTaskCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = title,
-                    color = AppColors.FontBlackStrong,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.ChevronRight,
-                    contentDescription = "View issue",
-                    tint = AppColors.TextHint,
-                    modifier = Modifier.size(12.dp),
-                )
-            }
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(132.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+
+            Text(
+                text = title,
+                color = AppColors.FontBlackStrong,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
 
             Text(
                 text = subtitle,
@@ -168,18 +165,39 @@ fun IssueTaskCard(
                 fontSize = 12.sp,
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                LabelChip(
-                    text = priority,
-                    background = Color(0xFFFFE5B6),
-                    textColor = Color(0xFF8C4B00),
-                )
-                LabelChip(
-                    text = if (isOpen) "Open" else "Resolved",
-                    background = if (isOpen) Color(0xFFFFDADA) else Color(0xFFD9F7DF),
-                    textColor = if (isOpen) AppColors.Red else AppColors.Green,
-                )
-            }
+            LabelChip(
+                text = "$taskCount tasks",
+                background = Color(0xFFE8EDF7),
+                textColor = AppColors.FontBlackSoft,
+            )
+        }
+    }
+}
+
+@Composable
+fun MoreIssuesCard(
+    remainingCount: Int,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, AppColors.LightGray.copy(alpha = 0.8f), RoundedCornerShape(14.dp)),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = AppColors.LightGray.copy(alpha = 0.12f)),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(248.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "+$remainingCount issues",
+                color = AppColors.TextHint,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }
@@ -221,10 +239,10 @@ private fun MechanicCardPreview() {
 @Composable
 private fun IssueTaskCardPreview() {
     IssueTaskCard(
+        imageUrl = "https://i.pinimg.com/1200x/f5/ff/28/f5ff28479532dafbc506ba7bcf3ff40d.jpg",
         title = "Engine warning light",
         subtitle = "Diagnostic required before next route",
-        priority = "High priority",
-        isOpen = true,
+        taskCount = 2,
     )
 }
 
