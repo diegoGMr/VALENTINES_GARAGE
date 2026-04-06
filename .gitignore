@@ -15,6 +15,7 @@
 local.properties
 node_modules/
 .env
+src/config/secrets.env
 certs/
 *.pem
 *.key
