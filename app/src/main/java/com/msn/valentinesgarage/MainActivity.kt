@@ -29,7 +29,17 @@ class MainActivity : ComponentActivity() {
                     var userRole by remember { mutableStateOf<String?>(null) }
 
                     when (currentScreen) {
-                        "home" -> HomeActivity(modifier = Modifier.fillMaxSize())
+                        "home" -> HomeActivity(
+                            modifier = Modifier.fillMaxSize(),
+                            token = authToken ?: "",
+                            role = userRole ?: "mechanic",
+                            onLogout = {
+                                authToken = null
+                                userId = null
+                                userRole = null
+                                currentScreen = "login"
+                            },
+                        )
                         "signup" -> SignUpActivity(onLogin = { currentScreen = "login" })
                         "login" -> LoginActivity(
                             onLoginSuccess = { token, id, role ->

@@ -1,34 +1,21 @@
 package com.msn.valentinesgarage.activities.homeActivity
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.msn.valentinesgarage.R
-import com.msn.valentinesgarage.activities.homeActivity.composables.HomeHeaderBanner
-import com.msn.valentinesgarage.activities.homeActivity.composables.HomeVehicleTaskCard
-import com.msn.valentinesgarage.activities.homeActivity.composables.SectionLabel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeViewModel
 import com.msn.valentinesgarage.activities.settingsActivity.SettingsActivity
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
+import compose.icons.fontawesomeicons.solid.Book
 import compose.icons.fontawesomeicons.solid.Cog
 import compose.icons.fontawesomeicons.solid.Home
 import compose.icons.fontawesomeicons.solid.Tasks
@@ -39,49 +26,49 @@ enum class HomeBottomTab(
     val icon: ImageVector,
 ) {
     Home(title = "Home", icon = FontAwesomeIcons.Solid.Home),
+    Booking(title = "Booking", icon = FontAwesomeIcons.Solid.Book),
+    Issues(title = "Issues", icon = FontAwesomeIcons.Solid.Tasks),
     Tasks(title = "Tasks", icon = FontAwesomeIcons.Solid.Tasks),
+    Admin(title = "Admin", icon = FontAwesomeIcons.Solid.User),
     Profile(title = "Profile", icon = FontAwesomeIcons.Solid.User),
     Settings(title = "Settings", icon = FontAwesomeIcons.Solid.Cog),
 }
 
-private enum class HomeScreen {
-    Dashboard,
-    VehicleInformation,
-    Settings,
-}
-
-data class VehicleCardUi(
-    val id: String,
-    val imageUrl: String,
-    val title: String,
-    val subtitle: String,
-    val dateText: String,
-    val pendingTasksText: String,
-)
-
 @Composable
 fun HomeActivity(
     modifier: Modifier = Modifier,
+    token: String = "",
+    role: String = "mechanic",
+    onLogout: () -> Unit = {},
+    homeViewModel: HomeViewModel = viewModel(),
 ) {
     var selectedTab by remember { mutableStateOf(HomeBottomTab.Home) }
-    var currentScreen by remember { mutableStateOf(HomeScreen.Dashboard) }
+    val state by homeViewModel.state.collectAsState()
+
+    val tabs = remember(role) {
+        buildList {
+            add(HomeBottomTab.Home)
+            add(HomeBottomTab.Booking)
+            add(HomeBottomTab.Issues)
+            if (role == "lead_mechanic" || role == "mechanic" || role == "admin") add(HomeBottomTab.Tasks)
+            if (role == "admin") add(HomeBottomTab.Admin)
+            add(HomeBottomTab.Settings)
+        }
+    }
+
+    LaunchedEffect(token, role) {
+        homeViewModel.loadData(token, role)
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = AppColors.White,
         bottomBar = {
             NavigationBar(containerColor = AppColors.White) {
-                HomeBottomTab.entries.forEach { tab ->
+                tabs.forEach { tab ->
                     NavigationBarItem(
                         selected = selectedTab == tab,
-                        onClick = {
-                            selectedTab = tab
-                            currentScreen = when (tab) {
-                                HomeBottomTab.Home -> HomeScreen.Dashboard
-                                HomeBottomTab.Settings -> HomeScreen.Settings
-                                else -> currentScreen
-                            }
-                        },
+                        onClick = { selectedTab = tab },
                         icon = {
                             Icon(
                                 imageVector = tab.icon,
@@ -101,98 +88,145 @@ fun HomeActivity(
             }
         },
     ) { innerPadding ->
-        when (currentScreen) {
-            HomeScreen.Dashboard -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = innerPadding.calculateBottomPadding()),
-                    contentPadding = PaddingValues(bottom = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    item(key = "home_banner") {
-                        HomeHeaderBanner(
-                            imageRes = R.drawable.truckbanner,
-                            profileImageRes = R.drawable.defaultprofileicon,
-                            greetingText = "Welcome Back!",
-                            profileName = "David Andrew",
-                            notificationCount = 5,
-                        )
-                    }
-
-                    item {
-                        SectionLabel(
-                            text = "Assigned Trucks",
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
-                    }
-
-                    items(items = sampleVehicleCards, key = { it.id }) { vehicle ->
-                        HomeVehicleTaskCard(
-                            imageUrl = vehicle.imageUrl,
-                            title = vehicle.title,
-                            subtitle = vehicle.subtitle,
-                            dateText = vehicle.dateText,
-                            pendingTasksText = vehicle.pendingTasksText,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            onClick = { currentScreen = HomeScreen.VehicleInformation },
-                        )
-                    }
-
-                    item {
-                        SectionLabel(
-                            text = "Pending Tasks",
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
-                    }
-                }
-            }
-
-            HomeScreen.VehicleInformation -> {
-                VehicleInformationActivity(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = innerPadding.calculateBottomPadding()),
-                )
-            }
-
-            HomeScreen.Settings -> {
-                SettingsActivity(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = innerPadding.calculateBottomPadding()),
-                )
-            }
+        when (selectedTab) {
+            HomeBottomTab.Home -> RoleHomePage(role = role, state = state, modifier = Modifier.padding(innerPadding))
+            HomeBottomTab.Booking -> BookingPage(
+                role = role,
+                state = state,
+                onCreate = { customer -> homeViewModel.createBooking(token, customer) },
+                onRefresh = { homeViewModel.loadData(token, role) },
+                modifier = Modifier.padding(innerPadding),
+            )
+            HomeBottomTab.Issues -> IssuesPage(
+                role = role,
+                state = state,
+                onCreate = { title, desc -> homeViewModel.createIssue(token, title, desc) },
+                onRefresh = { homeViewModel.loadData(token, role) },
+                modifier = Modifier.padding(innerPadding),
+            )
+            HomeBottomTab.Tasks -> TasksPage(
+                role = role,
+                state = state,
+                onCreate = { issueId, title, desc, category ->
+                    homeViewModel.createTask(token, issueId, title, desc, category)
+                },
+                onRefresh = { homeViewModel.loadData(token, role) },
+                modifier = Modifier.padding(innerPadding),
+            )
+            HomeBottomTab.Admin -> AdminPage(state = state, modifier = Modifier.padding(innerPadding))
+            HomeBottomTab.Settings, HomeBottomTab.Profile -> SettingsActivity(modifier = Modifier.padding(innerPadding))
         }
     }
 }
 
-private val sampleVehicleCards = listOf(
-    VehicleCardUi(
-        id = "1",
-        imageUrl = "https://i.pinimg.com/1200x/5b/15/f2/5b15f2cc8df52cf83c65e0cb79da6468.jpg",
-        title = "HSD343",
-        subtitle = "Scania Railer",
-        dateText = "18 March 2026 12:07am",
-        pendingTasksText = "19 pending tasks",
-    ),
-    VehicleCardUi(
-        id = "2",
-        imageUrl = "https://i.pinimg.com/1200x/ad/a5/25/ada52531f654fd58bbd43fa4ca0483fd.jpg",
-        title = "JKL918",
-        subtitle = "Volvo FH16",
-        dateText = "18 March 2026 10:22am",
-        pendingTasksText = "7 pending tasks",
-    ),
-    VehicleCardUi(
-        id = "3",
-        imageUrl = "https://i.pinimg.com/1200x/ad/a5/25/ada52531f654fd58bbd43fa4ca0483fd.jpg",
-        title = "QTR552",
-        subtitle = "MAN TGX",
-        dateText = "17 March 2026 08:42pm",
-        pendingTasksText = "3 pending tasks",
-    ),
-)
+@Composable
+private fun RoleHomePage(role: String, state: com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeDataState, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Logged in as: $role")
+        Text("Use tabs below. UI and backend permissions are role-based.")
+        state.infoMessage?.let { Text(it, color = AppColors.Orange) }
+        state.error?.let { Text(it, color = AppColors.Red) }
+    }
+}
+
+@Composable
+private fun BookingPage(
+    role: String,
+    state: com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeDataState,
+    onCreate: (String) -> Unit,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var customerName by remember { mutableStateOf("") }
+    Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Bookings (max 3 slots/day)")
+        Text("Used: ${state.bookings?.usedSlots ?: 0} / 3, Remaining: ${state.bookings?.remainingSlots ?: 3}")
+        OutlinedTextField(value = customerName, onValueChange = { customerName = it }, label = { Text("Customer name") })
+        Button(onClick = { if (customerName.isNotBlank()) onCreate(customerName) }) { Text("Create booking") }
+        Button(onClick = onRefresh) { Text("Refresh") }
+        Text("Bookings for today:")
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(state.bookings?.bookings.orEmpty()) { booking -> Text("- ${booking.customer_name}") }
+        }
+        if (role == "admin") Text("Admin can read all booking records from backend endpoints.")
+    }
+}
+
+@Composable
+private fun IssuesPage(
+    role: String,
+    state: com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeDataState,
+    onCreate: (String, String) -> Unit,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Issues")
+        if (role == "inspector") {
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Issue title") })
+            OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
+            Button(onClick = { if (title.isNotBlank() && description.isNotBlank()) onCreate(title, description) }) {
+                Text("Create issue")
+            }
+        } else {
+            Text("You can view issues only.")
+        }
+        Button(onClick = onRefresh) { Text("Refresh") }
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(state.issues) { issue -> Text("- ${issue.title} (${issue.status})") }
+        }
+    }
+}
+
+@Composable
+private fun TasksPage(
+    role: String,
+    state: com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeDataState,
+    onCreate: (Int, String, String, String) -> Unit,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var issueId by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("normal_mechanic") }
+    Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Tasks")
+        if (role == "lead_mechanic") {
+            OutlinedTextField(value = issueId, onValueChange = { issueId = it }, label = { Text("Issue ID") })
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Task title") })
+            OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
+            OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category (inspector/lead_mechanic/normal_mechanic)") })
+            Button(onClick = {
+                val parsedIssueId = issueId.toIntOrNull()
+                if (parsedIssueId != null && title.isNotBlank() && description.isNotBlank()) {
+                    onCreate(parsedIssueId, title, description, category)
+                }
+            }) { Text("Create task") }
+        } else {
+            Text("You can view tasks only.")
+        }
+        Button(onClick = onRefresh) { Text("Refresh") }
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(state.tasks) { task -> Text("- ${task.title} [${task.assigned_category}]") }
+        }
+    }
+}
+
+@Composable
+private fun AdminPage(
+    state: com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeDataState,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Admin Read: Users")
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(state.adminUsers) { user -> Text("- ${user.full_name} (${user.role})") }
+        }
+    }
+}
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
