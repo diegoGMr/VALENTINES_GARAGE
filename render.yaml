@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: valentines-garage-server
+    env: docker
+    dockerfilePath: ./server/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: "*"

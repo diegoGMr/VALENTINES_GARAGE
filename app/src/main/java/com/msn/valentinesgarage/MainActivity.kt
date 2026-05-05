@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
 
                     when (currentScreen) {
+<<<<<<< HEAD
                         "home" -> if (userProfile != null) {
                             HomeScreen(modifier = Modifier.fillMaxSize())
                         } else {
@@ -50,6 +51,21 @@ class MainActivity : ComponentActivity() {
                         "signup" -> SignUpScreen(onLogin = { currentScreen = "login" })
                         "login" -> LoginScreen(
                             shouldCallLoginApi = shouldCallLoginApi,
+=======
+                        "home" -> HomeActivity(
+                            modifier = Modifier.fillMaxSize(),
+                            token = authToken ?: "",
+                            role = userRole ?: "mechanic",
+                            onLogout = {
+                                authToken = null
+                                userId = null
+                                userRole = null
+                                currentScreen = "login"
+                            },
+                        )
+                        "signup" -> SignUpActivity(onLogin = { currentScreen = "login" })
+                        "login" -> LoginActivity(
+>>>>>>> Lenton
                             onLoginSuccess = { token, id, role ->
                                 userProfile = UserProfile(token = token, userId = id, role = role)
                                 currentScreen = "home"

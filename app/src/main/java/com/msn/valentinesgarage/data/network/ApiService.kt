@@ -63,4 +63,43 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") id: Int,
     ): Response<Truck>
+
+    @GET("booking/slots")
+    suspend fun getBookingSlots(
+        @Header("Authorization") token: String,
+        @Query("date") date: String,
+    ): Response<BookingSlotsResponse>
+
+    @POST("booking/slots")
+    suspend fun createBookingSlot(
+        @Header("Authorization") token: String,
+        @Body request: CreateBookingRequest,
+    ): Response<CreateBookingResponse>
+
+    @GET("issues")
+    suspend fun getIssues(
+        @Header("Authorization") token: String,
+    ): Response<List<Issue>>
+
+    @POST("issues")
+    suspend fun createIssue(
+        @Header("Authorization") token: String,
+        @Body request: CreateIssueRequest,
+    ): Response<CreateIssueResponse>
+
+    @GET("tasks")
+    suspend fun getTasks(
+        @Header("Authorization") token: String,
+    ): Response<List<Task>>
+
+    @POST("tasks")
+    suspend fun createTask(
+        @Header("Authorization") token: String,
+        @Body request: CreateTaskRequest,
+    ): Response<CreateTaskResponse>
+
+    @GET("admin/read/users")
+    suspend fun getAdminUsers(
+        @Header("Authorization") token: String,
+    ): Response<List<AdminUserRead>>
 }
