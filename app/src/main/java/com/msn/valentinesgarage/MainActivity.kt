@@ -23,7 +23,7 @@ data class UserProfile(
 )
 
 class MainActivity : ComponentActivity() {
-    private val shouldCallLoginApi = false // Set to true to enable API calls for login
+    private val shouldCallLoginApi = true // Set to true to enable API calls for login
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +35,25 @@ class MainActivity : ComponentActivity() {
                     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
 
                     when (currentScreen) {
-<<<<<<< HEAD
-                        "home" -> if (userProfile != null) {
-                            HomeScreen(modifier = Modifier.fillMaxSize())
-                        } else {
+                        "home" -> {
+                            userProfile?.let { profile ->
+                                HomeScreen(
+                                    modifier = Modifier.fillMaxSize(),
+                                    token = profile.token,
+                                    role = profile.role,
+                                    onLogout = {
+                                        userProfile = null
+                                        currentScreen = "login"
+                                    }
+                                )
+                            } ?: run {
+                                currentScreen = "login"
+                            }
+                        }
+                        "signup" -> {
+                            SignUpScreen(onLogin = { currentScreen = "login" })
+                        }
+                        "login" -> {
                             LoginScreen(
                                 shouldCallLoginApi = shouldCallLoginApi,
                                 onLoginSuccess = { token, id, role ->
@@ -48,30 +63,6 @@ class MainActivity : ComponentActivity() {
                                 onCreateAccount = { currentScreen = "signup" },
                             )
                         }
-                        "signup" -> SignUpScreen(onLogin = { currentScreen = "login" })
-                        "login" -> LoginScreen(
-                            shouldCallLoginApi = shouldCallLoginApi,
-=======
-                        "home" -> HomeActivity(
-                            modifier = Modifier.fillMaxSize(),
-                            token = authToken ?: "",
-                            role = userRole ?: "mechanic",
-                            onLogout = {
-                                authToken = null
-                                userId = null
-                                userRole = null
-                                currentScreen = "login"
-                            },
-                        )
-                        "signup" -> SignUpActivity(onLogin = { currentScreen = "login" })
-                        "login" -> LoginActivity(
->>>>>>> Lenton
-                            onLoginSuccess = { token, id, role ->
-                                userProfile = UserProfile(token = token, userId = id, role = role)
-                                currentScreen = "home"
-                            },
-                            onCreateAccount = { currentScreen = "signup" },
-                        )
                     }
                 }
             }

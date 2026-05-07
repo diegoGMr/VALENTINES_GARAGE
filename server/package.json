@@ -9,11 +9,13 @@
     "init-db": "node src/initDb.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.3",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   }

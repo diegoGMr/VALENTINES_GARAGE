@@ -1,20 +1,11 @@
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
-import fs from "node:fs";
+import { createClient } from "@supabase/supabase-js";
+import "dotenv/config";
 
-const dbDir = "./data";
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase credentials in .env file");
 }
 
-let dbPromise;
-
-export function getDb() {
-  if (!dbPromise) {
-    dbPromise = open({
-      filename: "./data/app.db",
-      driver: sqlite3.Database,
-    });
-  }
-  return dbPromise;
-}
+export const db = createClient(supabaseUrl, supabaseKey);
