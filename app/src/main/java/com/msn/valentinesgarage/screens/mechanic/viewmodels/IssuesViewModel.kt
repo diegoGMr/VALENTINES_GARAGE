@@ -54,4 +54,20 @@ class IssuesViewModel : ViewModel() {
             }
         }
     }
+
+    fun resolveIssue(token: String, issueId: Int) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val res = RetrofitClient.api.resolveIssue("Bearer $token", issueId)
+                if (res.isSuccessful) {
+                    loadIssues(token)
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to resolve issue") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown error") }
+            }
+        }
+    }
 }

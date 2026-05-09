@@ -11,12 +11,27 @@ const asyncHandler = (fn) => (req, res, next) => {
 router.post("/register", auth, asyncHandler(async (req, res) => {
   // If client, force their own userId
   const truckData = { ...req.body };
+
+  if (truckData.license_plate && truckData.license_plate.length > 8) {
+    return res.status(400).json({ message: "License plate cannot exceed 8 characters" });
+  }
+
   if (req.user.role === ROLE.CLIENT) {
     truckData.user_id = req.user.userId;
   }
 
-  const truck = await truckService.registerTruck(truckData);
-  res.status(201).json(truck);
+  console.log("Registering truck with data:", JSON.stringify(truckData));
+
+  try {
+    const truck = await truckService.registerTruck(truckData);
+    res.status(201).json(truck);
+  } catch (error) {
+    console.error("Truck registration error details:", error);
+    res.status(400).json({
+      message: error.message || "Registration failed",
+      details: error.hint || error.details
+    });
+  }
 }));
 
 router.get("/my-trucks", auth, asyncHandler(async (req, res) => {

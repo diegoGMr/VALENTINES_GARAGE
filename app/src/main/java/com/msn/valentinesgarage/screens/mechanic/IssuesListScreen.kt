@@ -221,18 +221,47 @@ fun IssuesListScreen(
                     )
                 }
             } else {
+                val groupedIssues = filteredIssues.groupBy { 
+                    it.visit?.trucks?.plate_number ?: "Unknown Vehicle" 
+                }
+
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(filteredIssues, key = { it.id }) { issue ->
-                        IssueCard(
-                            issue = issue,
-                            isReadOnly = isReadOnly,
-                            onStatusUpdate = { newStatus ->
-                                // TODO: Backend update
-                            },
-                        )
+                    groupedIssues.forEach { (vehicle, issues) ->
+                        item(key = "vehicle_header_$vehicle") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp, bottom = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.Truck,
+                                    contentDescription = null,
+                                    tint = AppColors.FontBlackMedium,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "Vehicle: $vehicle",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppColors.FontBlackMedium
+                                )
+                            }
+                        }
+                        
+                        items(issues, key = { it.id }) { issue ->
+                            IssueCard(
+                                issue = issue,
+                                isReadOnly = isReadOnly,
+                                onResolve = {
+                                    viewModel.resolveIssue(token, issue.id)
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -287,7 +316,7 @@ private fun CreateIssueDialog(
 private fun IssueCard(
     issue: Issue,
     isReadOnly: Boolean,
-    onStatusUpdate: (String) -> Unit,
+    onResolve: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -339,23 +368,40 @@ private fun IssueCard(
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Icon(
-                        imageVector = FontAwesomeIcons.Solid.Truck,
-                        contentDescription = null,
-                        tint = AppColors.TextHint,
-                        modifier = Modifier.size(10.dp),
-                    )
-                    Text(text = "Visit #${issue.visitId}", fontSize = 12.sp, color = AppColors.TextHint)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Truck,
+                            contentDescription = null,
+                            tint = AppColors.TextHint,
+                            modifier = Modifier.size(10.dp),
+                        )
+                        val plate = issue.visit?.trucks?.plate_number ?: "Visit #${issue.visitId}"
+                        Text(text = plate, fontSize = 12.sp, color = AppColors.TextHint)
+                    }
+                    Text(text = "•", fontSize = 12.sp, color = AppColors.TextHint)
+                    Text(text = "Mech #${issue.mechanicId}", fontSize = 12.sp, color = AppColors.TextHint)
                 }
-                Text(text = "•", fontSize = 12.sp, color = AppColors.TextHint)
-                Text(text = "Mechanic #${issue.mechanicId}", fontSize = 12.sp, color = AppColors.TextHint)
+
+                if (!isReadOnly && issue.resolved != true) {
+                    TextButton(
+                        onClick = onResolve,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text("Resolve", fontSize = 12.sp, color = AppColors.Orange)
+                    }
+                }
             }
         }
     }

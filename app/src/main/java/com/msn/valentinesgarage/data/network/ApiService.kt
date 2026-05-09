@@ -99,11 +99,28 @@ interface ApiService {
         @Header("Authorization") token: String,
     ): Response<List<Issue>>
 
+    @GET("my-visits")
+    suspend fun getMechanicVisits(
+        @Header("Authorization") token: String,
+    ): Response<List<MechanicVisit>>
+
     @POST("issues")
     suspend fun createIssue(
         @Header("Authorization") token: String,
         @Body request: CreateIssueRequest,
     ): Response<CreateIssueResponse>
+
+    @PUT("issues/{id}/resolve")
+    suspend fun resolveIssue(
+        @Header("Authorization") token: String,
+        @Path("id") issueId: Int,
+    ): Response<Issue>
+
+    @POST("visits/{id}/complete")
+    suspend fun completeVisit(
+        @Header("Authorization") token: String,
+        @Path("id") visitId: Int,
+    ): Response<Map<String, Any>>
 
     // ── Admin ─────────────────────────────────────────
     @GET("admin/stats")

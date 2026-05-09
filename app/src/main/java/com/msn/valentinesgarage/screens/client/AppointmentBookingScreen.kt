@@ -61,7 +61,8 @@ fun AppointmentBookingScreen(
     }
 
     var selectedVehicleId by remember { mutableStateOf<Int?>(null) }
-    var bookingTime by remember { mutableStateOf("09:00 AM") }
+    var bookingTime by remember { mutableStateOf("09:00") }
+    var clientNotes by remember { mutableStateOf("") }
     var bookingConfirmed by remember { mutableStateOf(false) }
     var showRegistration by remember { mutableStateOf(false) }
 
@@ -104,8 +105,8 @@ fun AppointmentBookingScreen(
 
     val progressSteps = listOf(
         AppointmentStatusStep("Booking Confirmed", isCompleted = true, isCurrent = false),
-        AppointmentStatusStep("Mechanic Assigned", isCompleted = true, isCurrent = false),
-        AppointmentStatusStep("In Progress", isCompleted = false, isCurrent = true),
+        AppointmentStatusStep("Mechanic Assigned", isCompleted = false, isCurrent = true),
+        AppointmentStatusStep("In Progress", isCompleted = false, isCurrent = false),
         AppointmentStatusStep("Review & QA", isCompleted = false, isCurrent = false),
         AppointmentStatusStep("Completed", isCompleted = false, isCurrent = false),
     )
@@ -287,10 +288,25 @@ fun AppointmentBookingScreen(
                     OutlinedTextField(
                         value = bookingTime,
                         onValueChange = { bookingTime = it },
-                        label = { Text("Booking Time") },
-                        placeholder = { Text("e.g. 10:00 AM") },
+                        label = { Text("Booking Time (HH:mm)") },
+                        placeholder = { Text("e.g. 09:00 or 15:30") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AppColors.Orange,
+                            unfocusedBorderColor = AppColors.LightGray
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = clientNotes,
+                        onValueChange = { clientNotes = it },
+                        label = { Text("Client Notes (Optional)") },
+                        placeholder = { Text("e.g. Please check the brakes specifically.") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 5,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = AppColors.Orange,
@@ -310,7 +326,8 @@ fun AppointmentBookingScreen(
                                 userId,
                                 vId,
                                 dateOptions[selectedDateIndex],
-                                bookingTime
+                                bookingTime,
+                                clientNotes.ifBlank { null }
                             )
                         }
                     },

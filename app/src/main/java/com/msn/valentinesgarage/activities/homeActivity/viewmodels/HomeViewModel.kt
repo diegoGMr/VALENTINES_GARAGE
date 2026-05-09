@@ -13,6 +13,7 @@ data class HomeDataState(
     val user: User? = null,
     val bookings: List<Booking>? = null,
     val issues: List<Issue> = emptyList(),
+    val mechanicVisits: List<MechanicVisit> = emptyList(),
     val adminUsers: List<AdminUserRead> = emptyList(),
     val isLoading: Boolean = false,
     val infoMessage: String? = null,
@@ -37,6 +38,13 @@ class HomeViewModel : ViewModel() {
                 val issueRes = RetrofitClient.api.getIssues(bearer)
                 val issues = if (issueRes.isSuccessful) issueRes.body().orEmpty() else emptyList()
 
+                val mechanicVisits = if (role == "mechanic") {
+                    val visitsRes = RetrofitClient.api.getMechanicVisits(bearer)
+                    if (visitsRes.isSuccessful) visitsRes.body().orEmpty() else emptyList()
+                } else {
+                    emptyList()
+                }
+
                 val adminUsers = if (role == "admin") {
                     val usersRes = RetrofitClient.api.getAdminUsers(bearer)
                     if (usersRes.isSuccessful) usersRes.body().orEmpty() else emptyList()
@@ -48,6 +56,7 @@ class HomeViewModel : ViewModel() {
                     user = user,
                     bookings = bookings,
                     issues = issues,
+                    mechanicVisits = mechanicVisits,
                     adminUsers = adminUsers,
                     isLoading = false,
                 )
@@ -72,12 +81,12 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun createBooking(token: String, clientId: Int, vehicleId: Int, date: String, time: String) {
+    fun createBooking(token: String, clientId: Int, truckId: Int, date: String, time: String, clientNotes: String? = null) {
         viewModelScope.launch {
             try {
                 val res = RetrofitClient.api.createBooking(
                     "Bearer $token",
-                    CreateBookingRequest(clientId, vehicleId, date, time),
+                    CreateBookingRequest(clientId, truckId, date, time, clientNotes),
                 )
                 if (res.isSuccessful) {
                     _state.value = _state.value.copy(infoMessage = "Booking created")

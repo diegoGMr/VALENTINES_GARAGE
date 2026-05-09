@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { db } from "../db.js";
 import { visitService } from "../services/visitService.js";
 import { userService } from "../services/userService.js";
 import { adminService } from "../services/adminService.js";
@@ -28,6 +29,18 @@ router.post("/issues", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandle
   res.status(201).json({ issueId: issue.issue_id });
 }));
 
+router.put("/issues/:id/resolve", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
+  const issueId = req.params.id;
+  const issue = await visitService.resolveIssue(issueId);
+  res.json(issue);
+}));
+
+router.post("/visits/:id/complete", auth, requireRole(ROLE.MECHANIC), asyncHandler(async (req, res) => {
+  const visitId = req.params.id;
+  const result = await visitService.completeVisit(visitId);
+  res.json({ message: "Truck marked as completed", result });
+}));
+
 router.get("/booking", auth, asyncHandler(async (req, res) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ message: "Missing date parameter" });
@@ -37,14 +50,15 @@ router.get("/booking", auth, asyncHandler(async (req, res) => {
 }));
 
 router.post("/booking", auth, asyncHandler(async (req, res) => {
-  const { client_id, vehicle_id, booking_date, booking_time } = req.body;
-  if (!client_id || !vehicle_id || !booking_date) return res.status(400).json({ message: "Missing fields" });
+  const { client_id, truck_id, booking_date, booking_time, client_notes } = req.body;
+  if (!client_id || !truck_id || !booking_date) return res.status(400).json({ message: "Missing fields" });
 
   const booking = await visitService.createBooking({
     client_id,
-    vehicle_id,
+    truck_id,
     booking_date,
-    booking_time
+    booking_time,
+    client_notes
   });
   res.status(201).json(booking);
 }));
@@ -58,6 +72,15 @@ router.post("/booking/:id/assign", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN),
 }));
 
 // Admin routes
+router.get("/my-visits", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
+  const { data, error } = await db
+    .from("visit")
+    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*)")
+    .eq("mechanic_id", req.user.userId);
+  if (error) throw error;
+  res.json(data);
+}));
+
 router.get("/admin/stats", auth, requireRole(ROLE.ADMIN), asyncHandler(async (_req, res) => {
     const stats = await adminService.getStats();
     res.json(stats);

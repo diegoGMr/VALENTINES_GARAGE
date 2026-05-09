@@ -67,6 +67,16 @@ data class ClientVisit(
     @SerializedName("client_notes") val client_notes: String?,
 )
 
+data class MechanicVisit(
+    @SerializedName("visit_id") val visitId: Int,
+    @SerializedName("client_id") val clientId: Int?,
+    @SerializedName("truck_id") val truckId: Int?,
+    @SerializedName("mechanic_id") val mechanicId: Int?,
+    @SerializedName("client_notes") val clientNotes: String?,
+    @SerializedName("trucks") val truck: Truck?,
+    @SerializedName("clients") val client: Client?,
+)
+
 data class NewVisitRequest(
     @SerializedName("client_id") val client_id: Int,
     val notes: String?,
@@ -74,6 +84,10 @@ data class NewVisitRequest(
 
 data class NewVisitResponse(
     val visitId: Int,
+)
+
+data class SpecialityInfo(
+    @SerializedName("name") val name: String
 )
 
 // ── Truck ─────────────────────────────────────────────
@@ -86,6 +100,7 @@ data class Truck(
     @SerializedName("next_service_due") val next_service_due: String?,
     @SerializedName("user_id") val user_id: Int,
     @SerializedName("speciality_id") val speciality_id: Int,
+    @SerializedName("speciality_trucks") val speciality: SpecialityInfo? = null,
 )
 
 data class RegisterTruckRequest(
@@ -97,23 +112,29 @@ data class RegisterTruckRequest(
 )
 
 data class RegisterTruckResponse(
-    val truckId: Int,
+    @SerializedName("truck_id") val truckId: Int,
 )
 
 // ── Booking ───────────────────────────────────────────
 data class Booking(
     @SerializedName("booking_id") val id: Int,
     @SerializedName("client_id") val clientId: Int?,
-    @SerializedName("vehicle_id") val vehicleId: Int?,
+    @SerializedName("truck_id") val truckId: Int?,
     @SerializedName("booking_date") val date: String?,
     @SerializedName("booking_time") val time: String?,
+    @SerializedName("client_notes") val clientNotes: String?,
+    @SerializedName("mechanic_id") val mechanicId: Int?,
+    @SerializedName("clients") val client: Client? = null,
+    @SerializedName("trucks") val truck: Truck? = null,
+    @SerializedName("visit") val visit: List<Map<String, Any>>? = null,
 )
 
 data class CreateBookingRequest(
     @SerializedName("client_id") val clientId: Int,
-    @SerializedName("vehicle_id") val vehicleId: Int,
+    @SerializedName("truck_id") val truckId: Int,
     @SerializedName("booking_date") val date: String,
     @SerializedName("booking_time") val time: String,
+    @SerializedName("client_notes") val clientNotes: String?,
 )
 
 data class CreateBookingResponse(
@@ -129,6 +150,12 @@ data class Issue(
     @SerializedName("issue_resolved?") val resolved: Boolean? = false,
     @SerializedName("created_at") val created_at: String? = null,
     val status: String? = null,
+    val visit: IssueVisit? = null,
+)
+
+data class IssueVisit(
+    @SerializedName("visit_id") val visitId: Int,
+    val trucks: Truck? = null,
 )
 
 data class CreateIssueRequest(

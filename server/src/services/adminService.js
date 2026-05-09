@@ -19,7 +19,7 @@ export const adminService = {
     const { data: openIssues, error: issueError } = await db
       .from("issues")
       .select("issue_id")
-      .eq("issue_resolved", false);
+      .eq("issue_resolved?", false);
 
     // Today's Appointments
     const today = new Date().toISOString().split('T')[0];
@@ -63,13 +63,13 @@ export const adminService = {
             .from("issues")
             .select("issue_id")
             .eq("mechanic_id", m.user_id)
-            .eq("issue_resolved", false);
+            .eq("issue_resolved?", false);
 
         const { data: completedTodayData } = await db
             .from("issues")
             .select("issue_id")
             .eq("mechanic_id", m.user_id)
-            .eq("issue_resolved", true);
+            .eq("issue_resolved?", true);
 
         return {
             id: m.user_id.toString(),

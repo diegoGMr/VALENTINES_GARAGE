@@ -72,8 +72,10 @@ fun VehicleRegistrationScreen(
             
             OutlinedTextField(
                 value = plate,
-                onValueChange = { plate = it },
-                label = { Text("License Plate") },
+                onValueChange = { 
+                    if (it.length <= 8) plate = it.uppercase() 
+                },
+                label = { Text("License Plate (Max 8 characters)") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(

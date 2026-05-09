@@ -38,13 +38,13 @@ class BookingViewModel : ViewModel() {
         }
     }
 
-    fun createBooking(token: String, clientId: Int, vehicleId: Int, date: String, time: String) {
+    fun createBooking(token: String, clientId: Int, truckId: Int, date: String, time: String, clientNotes: String? = null) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val response = RetrofitClient.api.createBooking(
                     "Bearer $token",
-                    CreateBookingRequest(clientId, vehicleId, date, time)
+                    CreateBookingRequest(clientId, truckId, date, time, clientNotes)
                 )
                 if (response.isSuccessful) {
                     _uiState.update { it.copy(isLoading = false, bookingSuccess = true) }

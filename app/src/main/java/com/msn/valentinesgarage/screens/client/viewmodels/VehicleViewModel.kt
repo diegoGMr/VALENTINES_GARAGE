@@ -63,7 +63,14 @@ class VehicleViewModel : ViewModel() {
                     _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                     loadData(token)
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = "Registration failed") }
+                    val rawError = res.errorBody()?.string() ?: ""
+                    val message = try {
+                        val json = com.google.gson.JsonParser.parseString(rawError).asJsonObject
+                        json.get("message")?.asString ?: "Registration failed"
+                    } catch (e: Exception) {
+                        "Registration failed"
+                    }
+                    _uiState.update { it.copy(isLoading = false, error = message) }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown error") }
