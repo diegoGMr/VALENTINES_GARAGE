@@ -128,7 +128,6 @@ fun IssueTaskCard(
     imageUrl: String,
     title: String,
     subtitle: String,
-    taskCount: Int,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -164,12 +163,6 @@ fun IssueTaskCard(
                 color = AppColors.FontBlackSoft,
                 fontSize = 12.sp,
             )
-
-            LabelChip(
-                text = "$taskCount tasks",
-                background = Color(0xFFE8EDF7),
-                textColor = AppColors.FontBlackSoft,
-            )
         }
     }
 }
@@ -202,27 +195,6 @@ fun MoreIssuesCard(
     }
 }
 
-@Composable
-private fun LabelChip(
-    text: String,
-    background: Color,
-    textColor: Color,
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(100.dp))
-            .background(background)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = text,
-            color = textColor,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun InformationCardPreview() {
@@ -242,8 +214,5 @@ private fun IssueTaskCardPreview() {
         imageUrl = "https://i.pinimg.com/1200x/f5/ff/28/f5ff28479532dafbc506ba7bcf3ff40d.jpg",
         title = "Engine warning light",
         subtitle = "Diagnostic required before next route",
-        taskCount = 2,
     )
 }
-
-

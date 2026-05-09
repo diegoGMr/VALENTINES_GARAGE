@@ -64,18 +64,36 @@ interface ApiService {
         @Path("id") id: Int,
     ): Response<Truck>
 
-    @GET("booking/slots")
-    suspend fun getBookingSlots(
+    @GET("truck/my-trucks")
+    suspend fun getUserTrucks(
+        @Header("Authorization") token: String,
+    ): Response<List<Truck>>
+
+    @GET("truck/specialities")
+    suspend fun getSpecialities(
+        @Header("Authorization") token: String,
+    ): Response<List<Map<String, Any>>>
+
+    // ── Booking ───────────────────────────────────────
+    @GET("booking")
+    suspend fun getBookings(
         @Header("Authorization") token: String,
         @Query("date") date: String,
-    ): Response<BookingSlotsResponse>
+    ): Response<List<Booking>>
 
-    @POST("booking/slots")
-    suspend fun createBookingSlot(
+    @POST("booking")
+    suspend fun createBooking(
         @Header("Authorization") token: String,
         @Body request: CreateBookingRequest,
     ): Response<CreateBookingResponse>
 
+    @POST("booking/{id}/assign")
+    suspend fun assignMechanicToBooking(
+        @Header("Authorization") token: String,
+        @Path("id") bookingId: Int,
+    ): Response<ClientVisit>
+
+    // ── Issues ────────────────────────────────────────
     @GET("issues")
     suspend fun getIssues(
         @Header("Authorization") token: String,
@@ -87,16 +105,21 @@ interface ApiService {
         @Body request: CreateIssueRequest,
     ): Response<CreateIssueResponse>
 
-    @GET("tasks")
-    suspend fun getTasks(
+    // ── Admin ─────────────────────────────────────────
+    @GET("admin/stats")
+    suspend fun getAdminStats(
         @Header("Authorization") token: String,
-    ): Response<List<Task>>
+    ): Response<AdminStatsResponse>
 
-    @POST("tasks")
-    suspend fun createTask(
+    @GET("admin/mechanics/workload")
+    suspend fun getMechanicWorkload(
         @Header("Authorization") token: String,
-        @Body request: CreateTaskRequest,
-    ): Response<CreateTaskResponse>
+    ): Response<List<MechanicWorkloadResponse>>
+
+    @GET("admin/database/stats")
+    suspend fun getDatabaseStats(
+        @Header("Authorization") token: String,
+    ): Response<Map<String, Int>>
 
     @GET("admin/read/users")
     suspend fun getAdminUsers(

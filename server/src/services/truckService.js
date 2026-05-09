@@ -11,5 +11,17 @@ export const truckService = {
     const { data, error } = await db.from("trucks").select("*").eq("truck_id", truckId).single();
     if (error) throw error;
     return data;
+  },
+
+  async getTrucksByUserId(userId) {
+    const { data, error } = await db.from("trucks").select("*").eq("user_id", userId);
+    if (error) throw error;
+    return data;
+  },
+
+  async getSpecialities() {
+    const { data, error } = await db.from("speciality_trucks").select("*");
+    if (error) throw error;
+    return data;
   }
 };

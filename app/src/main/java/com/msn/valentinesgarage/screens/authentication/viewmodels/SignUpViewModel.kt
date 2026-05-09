@@ -93,10 +93,7 @@ class SignUpViewModel : ViewModel() {
 
     private fun passwordErrorFor(password: String): String? {
         if (password.isBlank()) return "Password is required"
-        if (password.length <= 8) return "Password must be longer than 8 characters"
-        if (!hasUppercase.matches(password) || !hasNumber.matches(password) || !hasSymbol.matches(password)) {
-            return "Password must include a capital, number, and symbol"
-        }
+        if (password.length < 4) return "Password must be at least 4 characters"
         return null
     }
 

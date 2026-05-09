@@ -19,6 +19,11 @@ router.get("/getClientById/:clientId", auth, asyncHandler(async (req, res) => {
   res.json(client);
 }));
 
+router.get("/getClientByHex/:hexId", auth, asyncHandler(async (req, res) => {
+  const client = await clientService.getClientByHex(req.params.hexId);
+  res.json(client);
+}));
+
 router.post("/update", auth, requireRole(ROLE.ADMIN), asyncHandler(async (req, res) => {
   await clientService.updateClient(req.body.clientId, req.body);
   res.json({ updated: 1 });

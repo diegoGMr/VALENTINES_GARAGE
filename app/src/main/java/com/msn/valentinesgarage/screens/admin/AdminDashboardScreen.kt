@@ -1,35 +1,15 @@
 package com.msn.valentinesgarage.screens.admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,18 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.msn.valentinesgarage.data.models.AdminUserRead
+import com.msn.valentinesgarage.data.models.MechanicWorkloadResponse
+import com.msn.valentinesgarage.data.models.RegisterRequest
+import com.msn.valentinesgarage.screens.admin.viewmodels.AdminDashboardViewModel
+import com.msn.valentinesgarage.screens.dialog.FullLoadingScreen
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.Calendar
-import compose.icons.fontawesomeicons.solid.Check
-import compose.icons.fontawesomeicons.solid.Clock
-import compose.icons.fontawesomeicons.solid.Cog
-import compose.icons.fontawesomeicons.solid.ExclamationTriangle
-import compose.icons.fontawesomeicons.solid.Tasks
-import compose.icons.fontawesomeicons.solid.Truck
-import compose.icons.fontawesomeicons.solid.User
+import compose.icons.fontawesomeicons.solid.*
 
 // UI model for a stat card on the admin overview
 data class AdminStatUi(
@@ -59,231 +38,234 @@ data class AdminStatUi(
     val color: Color,
 )
 
-// UI model for mechanic workload row
-data class MechanicWorkloadUi(
-    val id: String,
-    val name: String,
-    val role: String,
-    val openTasks: Int,
-    val completedToday: Int,
-)
-
-// UI model for an appointment row in admin view
-data class AdminAppointmentUi(
-    val id: String,
-    val clientName: String,
-    val vehiclePlate: String,
-    val date: String,
-    val time: String,
-    val status: String,
-    val statusColor: Color,
-)
-
-private enum class AdminFilter(val label: String) {
-    All("All"),
-    Upcoming("Upcoming"),
-    InProgress("In Progress"),
-    Completed("Completed"),
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
     modifier: Modifier = Modifier,
+    token: String = "",
+    viewModel: AdminDashboardViewModel = viewModel()
 ) {
-    // TODO: Backend - GET /admin/stats to load system overview numbers (total trucks, mechanics, open issues, today's appointments)
-    // TODO: Backend - GET /admin/appointments?status={filter} to load filtered appointments list
-    // TODO: Backend - GET /admin/mechanics/workload to load all mechanics with their task counts
-    // TODO: Backend - GET /admin/database/stats for database statistics (total records, storage)
+    val uiState by viewModel.uiState.collectAsState()
+    var showCreateUserDialog by remember { mutableStateOf(false) }
 
-    var selectedFilter by remember { mutableStateOf(AdminFilter.All) }
-
-    // Sample stats — replace with API response
-    val stats = listOf(
-        AdminStatUi("Total Trucks", "24", FontAwesomeIcons.Solid.Truck, AppColors.Orange),
-        AdminStatUi("Mechanics", "8", FontAwesomeIcons.Solid.User, AppColors.Green),
-        AdminStatUi("Open Issues", "13", FontAwesomeIcons.Solid.ExclamationTriangle, AppColors.Red),
-        AdminStatUi("Today's Appointments", "6", FontAwesomeIcons.Solid.Calendar, AppColors.Pink),
-    )
-
-    // Sample mechanics workload — replace with API response
-    val mechanics = listOf(
-        MechanicWorkloadUi("m1", "Robert Mountain", "Lead Mechanic", openTasks = 5, completedToday = 3),
-        MechanicWorkloadUi("m2", "Simon Rivers", "Mechanic", openTasks = 3, completedToday = 2),
-        MechanicWorkloadUi("m3", "Joseph Oceanside", "Mechanic", openTasks = 7, completedToday = 1),
-        MechanicWorkloadUi("m4", "Jonas Desert", "Inspector", openTasks = 2, completedToday = 4),
-    )
-
-    // Sample appointments — replace with API response
-    val appointments = listOf(
-        AdminAppointmentUi("ap1", "David Andrew", "HSD343", "29 Apr 2026", "09:00 AM", "Upcoming", AppColors.Orange),
-        AdminAppointmentUi("ap2", "Sarah Connor", "JKL918", "29 Apr 2026", "01:00 PM", "In Progress", AppColors.Green),
-        AdminAppointmentUi("ap3", "Mike Johnson", "QTR552", "29 Apr 2026", "04:00 PM", "Upcoming", AppColors.Orange),
-        AdminAppointmentUi("ap4", "Anna Smith", "BRT001", "28 Apr 2026", "09:00 AM", "Completed", AppColors.FontBlackSoft),
-    )
-
-    val filteredAppointments = when (selectedFilter) {
-        AdminFilter.All -> appointments
-        AdminFilter.Upcoming -> appointments.filter { it.status == "Upcoming" }
-        AdminFilter.InProgress -> appointments.filter { it.status == "In Progress" }
-        AdminFilter.Completed -> appointments.filter { it.status == "Completed" }
+    LaunchedEffect(token) {
+        if (token.isNotEmpty()) {
+            viewModel.loadData(token)
+        }
     }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppColors.OrangeWhite)
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+    if (uiState.isLoading && uiState.stats == null) {
+        FullLoadingScreen(message = "Loading Dashboard...")
+        return
+    }
+
+    val stats = listOf(
+        AdminStatUi(
+            "Total Trucks",
+            maxOf(uiState.stats?.totalTrucks ?: 0, uiState.dbStats["trucks"] ?: 0).toString(),
+            FontAwesomeIcons.Solid.Truck,
+            AppColors.Orange
+        ),
+        AdminStatUi(
+            "Mechanics",
+            maxOf(uiState.stats?.totalMechanics ?: 0, uiState.mechanics.size).toString(),
+            FontAwesomeIcons.Solid.User,
+            AppColors.Green
+        ),
+        AdminStatUi(
+            "Open Issues",
+            maxOf(uiState.stats?.openIssues ?: 0, uiState.mechanics.sumOf { it.openTasks }).toString(),
+            FontAwesomeIcons.Solid.ExclamationTriangle,
+            AppColors.Red
+        ),
+        AdminStatUi(
+            "Total Appointments",
+            maxOf(uiState.stats?.todayAppointments ?: 0, uiState.dbStats["booking_slots"] ?: 0).toString(),
+            FontAwesomeIcons.Solid.Calendar,
+            AppColors.Pink
+        ),
+    )
+
+    PullToRefreshBox(
+        isRefreshing = uiState.isLoading,
+        onRefresh = { viewModel.loadData(token) },
+        modifier = modifier.fillMaxSize()
     ) {
-        item(key = "header") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column {
-                    Text(
-                        text = "Admin Dashboard",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppColors.FontBlackStrong,
-                    )
-                    Text(
-                        text = "System overview",
-                        fontSize = 13.sp,
-                        color = AppColors.TextHint,
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppColors.OrangeWhite)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item(key = "header") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        Text(
+                            text = "Admin Dashboard",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AppColors.FontBlackStrong,
+                        )
+                        Text(
+                            text = "System overview",
+                            fontSize = 13.sp,
+                            color = AppColors.TextHint,
+                        )
+                    }
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Cog,
+                        contentDescription = "Settings",
+                        tint = AppColors.FontBlackSoft,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.Cog,
-                    contentDescription = "Settings",
-                    tint = AppColors.FontBlackSoft,
-                    modifier = Modifier.size(18.dp),
+            }
+
+            uiState.error?.let { error ->
+                item {
+                    Text(text = error, color = Color.Red, modifier = Modifier.padding(16.dp))
+                }
+            }
+
+            // Stats grid
+            item(key = "stats") {
+                SectionLabel(
+                    text = "Overview",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    stats.take(2).forEach { stat ->
+                        AdminStatCard(stat = stat, modifier = Modifier.weight(1f))
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    stats.drop(2).forEach { stat ->
+                        AdminStatCard(stat = stat, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // User Management Section
+            item(key = "users_header") {
+                SectionLabel(
+                    text = "User Management",
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
-        }
 
-        // Stats grid
-        item(key = "stats") {
-            SectionLabel(
-                text = "Overview",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            // TODO: Backend - refresh stats on pull-to-refresh (GET /admin/stats)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                stats.take(2).forEach { stat ->
-                    AdminStatCard(stat = stat, modifier = Modifier.weight(1f))
-                }
+            items(uiState.users, key = { it.id }) { user ->
+                AdminUserRow(
+                    user = user,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                stats.drop(2).forEach { stat ->
-                    AdminStatCard(stat = stat, modifier = Modifier.weight(1f))
-                }
-            }
-        }
 
-        // Appointments with filter
-        item(key = "appointments_header") {
-            SectionLabel(
-                text = "All Appointments",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(AdminFilter.entries) { filter ->
-                    val isSelected = selectedFilter == filter
-                    Box(
-                        modifier = Modifier
-                            .border(
-                                1.5.dp,
-                                if (isSelected) AppColors.Orange else AppColors.LightGray,
-                                RoundedCornerShape(8.dp),
-                            )
-                            .background(
-                                if (isSelected) AppColors.Orange else AppColors.White,
-                                RoundedCornerShape(8.dp),
-                            )
-                            .clickable { selectedFilter = filter }
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
+            item(key = "add_user_action") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Surface(
+                        onClick = { showCreateUserDialog = true },
+                        color = AppColors.Orange,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(36.dp)
                     ) {
-                        Text(
-                            text = filter.label,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (isSelected) AppColors.White else AppColors.FontBlackMedium,
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.Plus,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                "ADD NEW USER",
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Mechanics workload
+            item(key = "mechanics_header") {
+                SectionLabel(
+                    text = "Mechanics Workload",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            items(uiState.mechanics, key = { it.id }) { mechanic ->
+                MechanicWorkloadRow(
+                    mechanic = mechanic,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            // Database stats
+            item(key = "db_stats") {
+                SectionLabel(
+                    text = "Database Statistics",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppColors.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        uiState.dbStats.forEach { (table, count) ->
+                            DbStatRow(label = "Total ${table.replaceFirstChar { it.uppercase() }}", value = count.toString())
+                        }
                     }
                 }
             }
         }
 
-        items(filteredAppointments, key = { it.id }) { appt ->
-            AdminAppointmentRow(
-                appointment = appt,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
-
-        // Mechanics workload
-        item(key = "mechanics_header") {
-            SectionLabel(
-                text = "Mechanics Workload",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
-
-        items(mechanics, key = { it.id }) { mechanic ->
-            MechanicWorkloadRow(
-                mechanic = mechanic,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
-
-        // Database stats placeholder
-        item(key = "db_stats") {
-            SectionLabel(
-                text = "Database Statistics",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            // TODO: Backend - GET /admin/database/stats to load real numbers
-            Card(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    DbStatRow(label = "Total Users", value = "42")
-                    DbStatRow(label = "Total Trucks", value = "24")
-                    DbStatRow(label = "Total Issues", value = "187")
-                    DbStatRow(label = "Total Tasks", value = "340")
-                    DbStatRow(label = "Total Appointments", value = "95")
+        if (showCreateUserDialog) {
+            CreateUserDialog(
+                onDismiss = { showCreateUserDialog = false },
+                onCreate = { req: RegisterRequest ->
+                    viewModel.createUser(token, req) {
+                        showCreateUserDialog = false
+                    }
                 }
-            }
+            )
         }
     }
 }
@@ -334,8 +316,8 @@ private fun AdminStatCard(
 }
 
 @Composable
-private fun AdminAppointmentRow(
-    appointment: AdminAppointmentUi,
+private fun AdminUserRow(
+    user: AdminUserRead,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -345,60 +327,39 @@ private fun AdminAppointmentRow(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = appointment.clientName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = AppColors.FontBlackStrong,
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Icon(
-                            imageVector = FontAwesomeIcons.Solid.Truck,
-                            contentDescription = null,
-                            tint = AppColors.TextHint,
-                            modifier = Modifier.size(10.dp),
-                        )
-                        Text(text = appointment.vehiclePlate, fontSize = 12.sp, color = AppColors.TextHint)
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Icon(
-                            imageVector = FontAwesomeIcons.Solid.Clock,
-                            contentDescription = null,
-                            tint = AppColors.TextHint,
-                            modifier = Modifier.size(10.dp),
-                        )
-                        Text(text = appointment.time, fontSize = 12.sp, color = AppColors.TextHint)
-                    }
-                }
-                Text(text = appointment.date, fontSize = 11.sp, color = AppColors.TextHint)
-            }
             Box(
-                modifier = Modifier
-                    .background(appointment.statusColor.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                modifier = Modifier.size(40.dp).background(AppColors.Orange.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(FontAwesomeIcons.Solid.User, contentDescription = null, tint = AppColors.Orange, modifier = Modifier.size(18.dp))
+            }
+            Column {
+                Text(user.full_name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AppColors.FontBlackStrong)
+                Text(user.email, fontSize = 12.sp, color = AppColors.TextHint)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Surface(
+                color = when(user.role) {
+                    "admin" -> AppColors.Red.copy(alpha = 0.1f)
+                    "mechanic" -> AppColors.Green.copy(alpha = 0.1f)
+                    else -> AppColors.LightGray.copy(alpha = 0.5f)
+                },
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = appointment.status,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = appointment.statusColor,
+                    text = user.role.uppercase(),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = when(user.role) {
+                        "admin" -> AppColors.Red
+                        "mechanic" -> AppColors.Green
+                        else -> AppColors.FontBlackMedium
+                    }
                 )
             }
         }
@@ -407,7 +368,7 @@ private fun AdminAppointmentRow(
 
 @Composable
 private fun MechanicWorkloadRow(
-    mechanic: MechanicWorkloadUi,
+    mechanic: MechanicWorkloadResponse,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -461,13 +422,13 @@ private fun MechanicWorkloadRow(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Icon(
-                        imageVector = FontAwesomeIcons.Solid.Tasks,
+                        imageVector = FontAwesomeIcons.Solid.ExclamationTriangle,
                         contentDescription = null,
                         tint = AppColors.Orange,
                         modifier = Modifier.size(10.dp),
                     )
                     Text(
-                        text = "${mechanic.openTasks} open",
+                        text = "${mechanic.openTasks} open issues",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.Orange,
@@ -484,7 +445,7 @@ private fun MechanicWorkloadRow(
                         modifier = Modifier.size(10.dp),
                     )
                     Text(
-                        text = "${mechanic.completedToday} done today",
+                        text = "${mechanic.completedToday} completed",
                         fontSize = 12.sp,
                         color = AppColors.Green,
                     )
@@ -509,6 +470,55 @@ private fun DbStatRow(label: String, value: String) {
             color = AppColors.FontBlackStrong,
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateUserDialog(
+    onDismiss: () -> Unit,
+    onCreate: (RegisterRequest) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("mechanic") }
+    val roles = listOf("admin", "mechanic", "client")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create New User") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Full Name") })
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+                OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") })
+                
+                Text("Role", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    roles.forEach { r ->
+                        FilterChip(
+                            selected = role == r,
+                            onClick = { role = r },
+                            label = { Text(r.uppercase()) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onCreate(RegisterRequest(name, email, password, if(phone.isBlank()) null else phone, role)) },
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Orange)
+            ) {
+                Text("CREATE")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("CANCEL") }
+        }
+    )
 }
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)

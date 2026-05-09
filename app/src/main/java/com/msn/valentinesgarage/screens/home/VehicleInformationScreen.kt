@@ -54,7 +54,6 @@ private data class IssueUi(
     val title: String,
     val subtitle: String,
     val severity: String,
-    val taskCount: Int,
 )
 
 private val issueImageUrls = listOf(
@@ -156,7 +155,7 @@ fun VehicleInformationScreen(
 
         item(key = "issues_header") {
             SectionHeaderRow(
-                title = "Pending Issues and Tasks",
+                title = "Pending Issues",
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -202,7 +201,6 @@ private fun IssueSeveritySubsection(
                     imageUrl = imageForIssue(issue.id),
                     title = issue.title,
                     subtitle = issue.subtitle,
-                    taskCount = issue.taskCount,
                     modifier = Modifier.width(220.dp),
                 )
             }
@@ -276,49 +274,42 @@ private val sampleIssues = listOf(
         title = "Engine warning light",
         subtitle = "Diagnostic scan required before dispatch.",
         severity = "Severe",
-        taskCount = 4,
     ),
     IssueUi(
         id = "2",
         title = "Rear brake pad wear",
         subtitle = "Parts available. Schedule replacement this week.",
         severity = "Mild",
-        taskCount = 2,
     ),
     IssueUi(
         id = "3",
         title = "Cabin filter replaced",
         subtitle = "Completed during last preventive maintenance.",
         severity = "Mild",
-        taskCount = 1,
     ),
     IssueUi(
         id = "4",
         title = "Steering alignment drift",
         subtitle = "Requires calibration after suspension service.",
         severity = "Mild",
-        taskCount = 3,
     ),
     IssueUi(
         id = "5",
         title = "Coolant level alert",
         subtitle = "Sensor reads intermittent low coolant warnings.",
         severity = "Severe",
-        taskCount = 2,
     ),
     IssueUi(
         id = "6",
         title = "Brake pressure warning",
         subtitle = "ABS and brake line pressure need urgent checks.",
         severity = "Severe",
-        taskCount = 5,
     ),
     IssueUi(
         id = "7",
         title = "Cabin vibration report",
         subtitle = "Driver noted mild vibration at idle speed.",
         severity = "Mild",
-        taskCount = 2,
     ),
 )
 

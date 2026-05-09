@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.msn.valentinesgarage.R
+import com.msn.valentinesgarage.data.models.User
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.screens.settings.composables.ProfileCard
 import compose.icons.FontAwesomeIcons
@@ -45,6 +46,8 @@ import compose.icons.fontawesomeicons.solid.ChevronRight
 
 @Composable
 fun SettingsScreen(
+    user: User? = null,
+    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier,
 ){
     var isDarkTheme by remember { mutableStateOf(false) }
@@ -96,8 +99,8 @@ fun SettingsScreen(
         item {
             ProfileCard(
                 profileImageRes = R.drawable.defaultprofileicon,
-                fullName = "DummyFullName",
-                email = "dummyaccount@example.com",
+                fullName = user?.full_name ?: "Loading...",
+                email = user?.email ?: "...",
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -149,7 +152,7 @@ fun SettingsScreen(
 
         item {
             Button(
-                onClick = { },
+                onClick = onLogout,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp),

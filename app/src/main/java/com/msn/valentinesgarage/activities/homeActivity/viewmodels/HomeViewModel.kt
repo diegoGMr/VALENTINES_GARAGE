@@ -10,9 +10,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 data class HomeDataState(
-    val bookings: BookingSlotsResponse? = null,
+    val user: User? = null,
+    val bookings: List<Booking>? = null,
     val issues: List<Issue> = emptyList(),
-    val tasks: List<Task> = emptyList(),
     val adminUsers: List<AdminUserRead> = emptyList(),
     val isLoading: Boolean = false,
     val infoMessage: String? = null,
@@ -23,19 +23,19 @@ class HomeViewModel : ViewModel() {
     private val _state = MutableStateFlow(HomeDataState())
     val state: StateFlow<HomeDataState> = _state
 
-    fun loadData(token: String, role: String) {
+    fun loadData(token: String, role: String, userId: Int) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null, infoMessage = null)
             val bearer = "Bearer $token"
             try {
-                val bookingRes = RetrofitClient.api.getBookingSlots(bearer, LocalDate.now().toString())
+                val userRes = RetrofitClient.api.getUserById(bearer, userId)
+                val user = if (userRes.isSuccessful) userRes.body() else null
+
+                val bookingRes = RetrofitClient.api.getBookings(bearer, LocalDate.now().toString())
                 val bookings = if (bookingRes.isSuccessful) bookingRes.body() else null
 
                 val issueRes = RetrofitClient.api.getIssues(bearer)
                 val issues = if (issueRes.isSuccessful) issueRes.body().orEmpty() else emptyList()
-
-                val taskRes = RetrofitClient.api.getTasks(bearer)
-                val tasks = if (taskRes.isSuccessful) taskRes.body().orEmpty() else emptyList()
 
                 val adminUsers = if (role == "admin") {
                     val usersRes = RetrofitClient.api.getAdminUsers(bearer)
@@ -45,9 +45,9 @@ class HomeViewModel : ViewModel() {
                 }
 
                 _state.value = _state.value.copy(
+                    user = user,
                     bookings = bookings,
                     issues = issues,
-                    tasks = tasks,
                     adminUsers = adminUsers,
                     isLoading = false,
                 )
@@ -57,10 +57,10 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun createIssue(token: String, title: String, description: String) {
+    fun createIssue(token: String, visitId: Int, description: String) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api.createIssue("Bearer $token", CreateIssueRequest(title, description))
+                val res = RetrofitClient.api.createIssue("Bearer $token", CreateIssueRequest(visitId, description))
                 if (res.isSuccessful) {
                     _state.value = _state.value.copy(infoMessage = "Issue created")
                 } else {
@@ -72,30 +72,12 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun createTask(token: String, issueId: Int, title: String, description: String, category: String) {
+    fun createBooking(token: String, clientId: Int, vehicleId: Int, date: String, time: String) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api.createTask(
+                val res = RetrofitClient.api.createBooking(
                     "Bearer $token",
-                    CreateTaskRequest(issueId, title, description, category),
-                )
-                if (res.isSuccessful) {
-                    _state.value = _state.value.copy(infoMessage = "Task created")
-                } else {
-                    _state.value = _state.value.copy(error = "Task creation not allowed")
-                }
-            } catch (_: Exception) {
-                _state.value = _state.value.copy(error = "Task request failed")
-            }
-        }
-    }
-
-    fun createBooking(token: String, customerName: String) {
-        viewModelScope.launch {
-            try {
-                val res = RetrofitClient.api.createBookingSlot(
-                    "Bearer $token",
-                    CreateBookingRequest(LocalDate.now().toString(), customerName),
+                    CreateBookingRequest(clientId, vehicleId, date, time),
                 )
                 if (res.isSuccessful) {
                     _state.value = _state.value.copy(infoMessage = "Booking created")
@@ -104,6 +86,23 @@ class HomeViewModel : ViewModel() {
                 }
             } catch (_: Exception) {
                 _state.value = _state.value.copy(error = "Booking request failed")
+            }
+        }
+    }
+
+    fun assignToBooking(token: String, bookingId: Int, role: String, userId: Int) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                val res = RetrofitClient.api.assignMechanicToBooking("Bearer $token", bookingId)
+                if (res.isSuccessful) {
+                    _state.value = _state.value.copy(infoMessage = "Assigned successfully. Visit created.")
+                    loadData(token, role, userId)
+                } else {
+                    _state.value = _state.value.copy(isLoading = false, error = "Assignment failed")
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = e.message ?: "Error assigning booking")
             }
         }
     }

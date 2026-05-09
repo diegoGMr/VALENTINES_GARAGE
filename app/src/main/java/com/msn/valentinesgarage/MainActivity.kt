@@ -6,15 +6,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.msn.valentinesgarage.data.SessionManager
 import com.msn.valentinesgarage.screens.authentication.LoginScreen
 import com.msn.valentinesgarage.screens.authentication.SignUpScreen
+import com.msn.valentinesgarage.screens.dialog.FullLoadingScreen
 import com.msn.valentinesgarage.screens.home.HomeScreen
 import com.msn.valentinesgarage.theme.ValentinesGarageTheme
+import kotlinx.coroutines.delay
 
 data class UserProfile(
     val token: String,
@@ -23,45 +27,70 @@ data class UserProfile(
 )
 
 class MainActivity : ComponentActivity() {
-    private val shouldCallLoginApi = true // Set to true to enable API calls for login
+    private val shouldCallLoginApi = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        val sessionManager = SessionManager(this)
+        
         enableEdgeToEdge()
         setContent {
             ValentinesGarageTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
+                    var isInitializing by remember { mutableStateOf(true) }
                     var currentScreen by remember { mutableStateOf("login") }
                     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
 
-                    when (currentScreen) {
-                        "home" -> {
-                            userProfile?.let { profile ->
-                                HomeScreen(
-                                    modifier = Modifier.fillMaxSize(),
-                                    token = profile.token,
-                                    role = profile.role,
-                                    onLogout = {
-                                        userProfile = null
-                                        currentScreen = "login"
-                                    }
-                                )
-                            } ?: run {
-                                currentScreen = "login"
-                            }
-                        }
-                        "signup" -> {
-                            SignUpScreen(onLogin = { currentScreen = "login" })
-                        }
-                        "login" -> {
-                            LoginScreen(
-                                shouldCallLoginApi = shouldCallLoginApi,
-                                onLoginSuccess = { token, id, role ->
-                                    userProfile = UserProfile(token = token, userId = id, role = role)
-                                    currentScreen = "home"
-                                },
-                                onCreateAccount = { currentScreen = "signup" },
+                    LaunchedEffect(Unit) {
+                        // Check session
+                        if (sessionManager.isLoggedIn()) {
+                            userProfile = UserProfile(
+                                token = sessionManager.getToken() ?: "",
+                                userId = sessionManager.getUserId(),
+                                role = sessionManager.getRole() ?: "mechanic"
                             )
+                            currentScreen = "home"
+                        }
+                        delay(500) // Small delay for smooth transition
+                        isInitializing = false
+                    }
+
+                    if (isInitializing) {
+                        FullLoadingScreen(message = "Valentines Garage")
+                    } else {
+                        when (currentScreen) {
+                            "home" -> {
+                                userProfile?.let { profile ->
+                                    HomeScreen(
+                                        modifier = Modifier.fillMaxSize(),
+                                        token = profile.token,
+                                        userId = profile.userId,
+                                        role = profile.role,
+                                        onLogout = {
+                                            sessionManager.clearSession()
+                                            userProfile = null
+                                            currentScreen = "login"
+                                        }
+                                    )
+                                } ?: run {
+                                    currentScreen = "login"
+                                }
+                            }
+                            "signup" -> {
+                                SignUpScreen(onLogin = { currentScreen = "login" })
+                            }
+                            "login" -> {
+                                LoginScreen(
+                                    shouldCallLoginApi = shouldCallLoginApi,
+                                    onLoginSuccess = { token, id, role ->
+                                        sessionManager.saveSession(token, id, role)
+                                        userProfile = UserProfile(token = token, userId = id, role = role)
+                                        currentScreen = "home"
+                                    },
+                                    onCreateAccount = { currentScreen = "signup" },
+                                )
+                            }
                         }
                     }
                 }

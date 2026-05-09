@@ -5,12 +5,13 @@ import com.google.gson.annotations.SerializedName
 // ── User ──────────────────────────────────────────────
 data class User(
     @SerializedName("user_id") val user_id: Int,
-    @SerializedName("hex_id") val hex_id: String,
     @SerializedName("full_name") val full_name: String,
     val username: String,
     val email: String,
     val phone: String?,
     val role: String,
+    @SerializedName("created_at") val created_at: String? = null,
+    @SerializedName("updated_at") val updated_at: String? = null,
 )
 
 // ── Auth ──────────────────────────────────────────────
@@ -40,11 +41,12 @@ data class RegisterResponse(
 
 // ── Client ────────────────────────────────────────────
 data class Client(
-    @SerializedName("client_id") val client_id: Int,
-    @SerializedName("hex_id") val hex_id: String,
+    @SerializedName("user_id") val user_id: Int,
     @SerializedName("full_name") val full_name: String,
     val email: String?,
     val phone: String?,
+    val address: String? = null,
+    @SerializedName("company_name") val company_name: String? = null,
 )
 
 data class RegisterClientRequest(
@@ -59,9 +61,10 @@ data class RegisterClientResponse(
 
 data class ClientVisit(
     @SerializedName("visit_id") val visit_id: Int,
-    @SerializedName("client_id") val client_id: Int,
-    @SerializedName("visit_date") val visit_date: String,
-    val notes: String?,
+    @SerializedName("client_id") val client_id: Int?,
+    @SerializedName("truck_id") val truck_id: Int?,
+    @SerializedName("mechanic_id") val mechanic_id: Int?,
+    @SerializedName("client_notes") val client_notes: String?,
 )
 
 data class NewVisitRequest(
@@ -76,90 +79,87 @@ data class NewVisitResponse(
 // ── Truck ─────────────────────────────────────────────
 data class Truck(
     @SerializedName("truck_id") val truck_id: Int,
-    @SerializedName("hex_id") val hex_id: String,
-    @SerializedName("plate_number") val plate_number: String,
-    val make: String?,
-    val model: String?,
-    val year: Int?,
-    val status: String?,
+    @SerializedName("license_plate") val plate_number: String,
+    @SerializedName("truck_image_url") val truck_image_url: String?,
+    val kilometers: Int?,
+    @SerializedName("last_service_date") val last_service_date: String?,
+    @SerializedName("next_service_due") val next_service_due: String?,
+    @SerializedName("user_id") val user_id: Int,
+    @SerializedName("speciality_id") val speciality_id: Int,
 )
 
 data class RegisterTruckRequest(
-    @SerializedName("plate_number") val plate_number: String,
-    val make: String?,
-    val model: String?,
-    val year: Int?,
+    @SerializedName("license_plate") val plate_number: String,
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("speciality_id") val specialityId: Int,
+    @SerializedName("truck_image_url") val imageUrl: String? = null,
+    val kilometers: Int? = null,
 )
 
 data class RegisterTruckResponse(
     val truckId: Int,
 )
 
-data class BookingSlot(
-    val id: Int,
-    @SerializedName("slot_date") val slot_date: String,
-    @SerializedName("customer_name") val customer_name: String,
-    @SerializedName("created_by_user_id") val created_by_user_id: Int,
-)
-
-data class BookingSlotsResponse(
-    val date: String,
-    val usedSlots: Int,
-    val maxSlots: Int,
-    val remainingSlots: Int,
-    val bookings: List<BookingSlot>,
+// ── Booking ───────────────────────────────────────────
+data class Booking(
+    @SerializedName("booking_id") val id: Int,
+    @SerializedName("client_id") val clientId: Int?,
+    @SerializedName("vehicle_id") val vehicleId: Int?,
+    @SerializedName("booking_date") val date: String?,
+    @SerializedName("booking_time") val time: String?,
 )
 
 data class CreateBookingRequest(
-    val date: String,
-    @SerializedName("customerName") val customerName: String,
+    @SerializedName("client_id") val clientId: Int,
+    @SerializedName("vehicle_id") val vehicleId: Int,
+    @SerializedName("booking_date") val date: String,
+    @SerializedName("booking_time") val time: String,
 )
 
 data class CreateBookingResponse(
-    val bookingId: Int,
+    @SerializedName("booking_id") val bookingId: Int,
 )
 
+// ── Issue ─────────────────────────────────────────────
 data class Issue(
     @SerializedName("issue_id") val id: Int,
-    @SerializedName("title") val title: String? = null,
+    @SerializedName("visit_id") val visitId: Int,
     @SerializedName("issue_description") val description: String,
-    @SerializedName("status") val status: String? = "Pending",
+    @SerializedName("mechanic_id") val mechanicId: Int,
+    @SerializedName("issue_resolved?") val resolved: Boolean? = false,
     @SerializedName("created_at") val created_at: String? = null,
+    val status: String? = null,
 )
 
 data class CreateIssueRequest(
-    @SerializedName("visit_id") val visit_id: Int,
+    @SerializedName("visit_id") val visitId: Int,
     @SerializedName("issue_description") val description: String,
-    @SerializedName("mechanic_id") val mechanic_id: Int? = null,
+    @SerializedName("mechanic_id") val mechanicId: Int? = null,
 )
 
 data class CreateIssueResponse(
     val issueId: Int,
 )
 
-data class Task(
-    val id: Int,
-    @SerializedName("issue_id") val issue_id: Int,
-    val title: String,
-    val description: String,
-    @SerializedName("assigned_category") val assigned_category: String,
-    @SerializedName("created_at") val created_at: String,
-)
-
-data class CreateTaskRequest(
-    @SerializedName("issueId") val issueId: Int,
-    val title: String,
-    val description: String,
-    @SerializedName("assignedCategory") val assignedCategory: String,
-)
-
-data class CreateTaskResponse(
-    val taskId: Int,
-)
-
+// ── Admin ─────────────────────────────────────────────
 data class AdminUserRead(
     @SerializedName("user_id") val id: Int,
     @SerializedName("full_name") val full_name: String,
     val email: String,
     val role: String,
+)
+
+data class AdminStatsResponse(
+    @SerializedName("totalTrucks") val totalTrucks: Int,
+    @SerializedName("totalMechanics") val totalMechanics: Int,
+    @SerializedName("openIssues") val openIssues: Int,
+    @SerializedName("todayAppointments") val todayAppointments: Int
+)
+
+data class MechanicWorkloadResponse(
+    @SerializedName("id") val id: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("role") val role: String,
+    @SerializedName("openTasks") val openTasks: Int,
+    @SerializedName("completedToday") val completedToday: Int
 )

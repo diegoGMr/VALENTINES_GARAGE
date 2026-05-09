@@ -1,0 +1,79 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.bookings (
+  booking_id integer NOT NULL DEFAULT nextval('bookings_booking_id_seq'::regclass),
+  client_id bigint,
+  vehicle_id bigint,
+  booking_date date,
+  booking_time character,
+  CONSTRAINT bookings_pkey PRIMARY KEY (booking_id),
+  CONSTRAINT bookings_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.users(user_id),
+  CONSTRAINT bookings_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.trucks(truck_id)
+);
+CREATE TABLE public.clients (
+  user_id integer NOT NULL DEFAULT nextval('clients_client_id_seq'::regclass),
+  full_name character varying NOT NULL,
+  email character varying,
+  phone character varying,
+  address text,
+  company_name character varying,
+  CONSTRAINT clients_pkey PRIMARY KEY (user_id),
+  CONSTRAINT clients_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.issues (
+  issue_id integer NOT NULL DEFAULT nextval('issues_issue_id_seq'::regclass),
+  visit_id integer NOT NULL,
+  issue_description character varying,
+  mechanic_id integer NOT NULL,
+  issue_resolved? boolean,
+  CONSTRAINT issues_pkey PRIMARY KEY (issue_id),
+  CONSTRAINT fk_mechanic FOREIGN KEY (mechanic_id) REFERENCES public.users(user_id),
+  CONSTRAINT issues_visit_id_fkey FOREIGN KEY (visit_id) REFERENCES public.visit(visit_id)
+);
+CREATE TABLE public.mechanics (
+  user_id integer NOT NULL,
+  CONSTRAINT mechanics_pkey PRIMARY KEY (user_id),
+  CONSTRAINT fk_userid FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.speciality_trucks (
+  id integer NOT NULL DEFAULT nextval('speciality_trucks_id_seq'::regclass),
+  name character varying NOT NULL,
+  CONSTRAINT speciality_trucks_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.trucks (
+  truck_id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  license_plate character varying NOT NULL UNIQUE,
+  truck_image_url text,
+  kilometers integer,
+  last_service_date date,
+  next_service_due date,
+  user_id bigint NOT NULL,
+  speciality_id integer NOT NULL,
+  CONSTRAINT trucks_pkey PRIMARY KEY (truck_id),
+  CONSTRAINT trucks_speciality_id_fkey FOREIGN KEY (speciality_id) REFERENCES public.speciality_trucks(id),
+  CONSTRAINT trucks_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.clients(user_id)
+);
+CREATE TABLE public.users (
+  user_id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  full_name character varying NOT NULL,
+  username character varying NOT NULL,
+  email character varying NOT NULL UNIQUE,
+  password character varying NOT NULL,
+  phone character varying,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  role USER-DEFINED NOT NULL,
+  CONSTRAINT users_pkey PRIMARY KEY (user_id)
+);
+CREATE TABLE public.visit (
+  visit_id integer NOT NULL DEFAULT nextval('visit_visit_id_seq'::regclass),
+  client_id integer,
+  truck_id integer,
+  client_notes character varying,
+  mechanic_id integer,
+  CONSTRAINT visit_pkey PRIMARY KEY (visit_id),
+  CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES public.clients(user_id),
+  CONSTRAINT fk_mechanic FOREIGN KEY (mechanic_id) REFERENCES public.mechanics(user_id),
+  CONSTRAINT fk_truck FOREIGN KEY (truck_id) REFERENCES public.trucks(truck_id)
+);

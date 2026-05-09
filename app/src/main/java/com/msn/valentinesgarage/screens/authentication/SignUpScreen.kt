@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Surface
@@ -100,11 +102,12 @@ fun SignUpScreen(
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             modifier = Modifier.fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .fillMaxHeight(0.75f),
+                .fillMaxHeight(0.85f),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 28.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top,
@@ -165,7 +168,7 @@ fun SignUpScreen(
                 ) {
                     Checkbox(
                         checked = uiState.agreedToTerms,
-                        onCheckedChange = null,
+                        onCheckedChange = { signUpViewModel.onAgreedToTermsChanged(it) },
                         colors = CheckboxDefaults.colors(
                             checkedColor = AppColors.Orange,
                             uncheckedColor = AppColors.LightGray,

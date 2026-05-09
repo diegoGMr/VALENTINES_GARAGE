@@ -173,4 +173,8 @@ class LoginViewModel : ViewModel() {
         val state = _uiState.value
         return emailErrorFor(state.email) == null && passwordErrorFor(state.password) == null
     }
+
+    fun resetState() {
+        _uiState.value = LoginUiState()
+    }
 }

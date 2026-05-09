@@ -3,36 +3,14 @@ package com.msn.valentinesgarage.screens.client
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,15 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.msn.valentinesgarage.screens.client.viewmodels.BookingViewModel
+import com.msn.valentinesgarage.screens.client.viewmodels.VehicleViewModel
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.Calendar
-import compose.icons.fontawesomeicons.solid.Check
-import compose.icons.fontawesomeicons.solid.Clock
+import compose.icons.fontawesomeicons.solid.*
+import java.time.LocalDate
 
-// UI model for a bookable time slot (3 per day: morning, afternoon, evening)
+// UI model for a bookable time slot
 data class TimeSlotUi(
     val id: String,
     val label: String,      // e.g. "09:00 AM"
@@ -56,38 +36,72 @@ data class TimeSlotUi(
     val isAvailable: Boolean,
 )
 
-// UI model for appointment status step in the progress tracker
+// UI model for appointment status step
 data class AppointmentStatusStep(
     val label: String,
     val isCompleted: Boolean,
     val isCurrent: Boolean,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentBookingScreen(
+    token: String = "",
+    userId: Int = 0,
     modifier: Modifier = Modifier,
+    bookingViewModel: BookingViewModel = viewModel(),
+    vehicleViewModel: VehicleViewModel = viewModel()
 ) {
-    // TODO: Backend - GET /appointments/availableSlots?date={selectedDate} to load available time slots
-    // TODO: Backend - POST /appointments/book with { clientId, slotId, vehiclePlate, notes } to create booking
-    // TODO: Backend - GET /appointments/status/{appointmentId} to poll live appointment progress
-    // TODO: Backend - subscribe to push notifications for appointment status updates (Firebase/OneSignal)
+    val uiState by bookingViewModel.uiState.collectAsState()
+    val vehicleState by vehicleViewModel.uiState.collectAsState()
 
     var selectedDateIndex by remember { mutableStateOf(0) }
-    var selectedSlotId by remember { mutableStateOf<String?>(null) }
-    var vehiclePlate by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+    val dateOptions = remember {
+        (0..4).map { LocalDate.now().plusDays(it.toLong()).toString() }
+    }
+
+    var selectedVehicleId by remember { mutableStateOf<Int?>(null) }
+    var bookingTime by remember { mutableStateOf("09:00 AM") }
     var bookingConfirmed by remember { mutableStateOf(false) }
+    var showRegistration by remember { mutableStateOf(false) }
 
-    val dateOptions = listOf("Today", "Tomorrow", "In 2 days", "In 3 days", "In 4 days")
+    LaunchedEffect(token, selectedDateIndex) {
+        if (token.isNotEmpty()) {
+            bookingViewModel.loadBookings(token, dateOptions[selectedDateIndex])
+            vehicleViewModel.loadData(token)
+        }
+    }
 
-    // Sample slots — replace with API response
-    val timeSlots = listOf(
-        TimeSlotUi("slot_1", "09:00 AM", "Morning", isAvailable = true),
-        TimeSlotUi("slot_2", "01:00 PM", "Afternoon", isAvailable = true),
-        TimeSlotUi("slot_3", "04:00 PM", "Evening", isAvailable = false),
-    )
+    if (showRegistration) {
+        VehicleRegistrationScreen(
+            token = token,
+            userId = userId,
+            onSuccess = {
+                showRegistration = false
+                vehicleViewModel.loadData(token)
+            },
+            modifier = modifier
+        )
+        return
+    }
 
-    // Sample progress steps for a booked appointment
+    LaunchedEffect(uiState.bookingSuccess) {
+        if (uiState.bookingSuccess) {
+            bookingConfirmed = true
+            bookingViewModel.resetSuccess()
+        }
+    }
+
+    // Map database bookings to UI slots
+    val occupiedSlots = uiState.bookings.map { b ->
+        TimeSlotUi(
+            id = b.id.toString(),
+            label = b.time ?: "TBD",
+            period = "Booked",
+            isAvailable = false
+        )
+    }
+
     val progressSteps = listOf(
         AppointmentStatusStep("Booking Confirmed", isCompleted = true, isCurrent = false),
         AppointmentStatusStep("Mechanic Assigned", isCompleted = true, isCurrent = false),
@@ -105,183 +119,220 @@ fun AppointmentBookingScreen(
         return
     }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppColors.White)
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+    PullToRefreshBox(
+        isRefreshing = uiState.isLoading || vehicleState.isLoading,
+        onRefresh = {
+            bookingViewModel.loadBookings(token, dateOptions[selectedDateIndex])
+            vehicleViewModel.loadData(token)
+        },
+        modifier = modifier.fillMaxSize()
     ) {
-        item(key = "header") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.Calendar,
-                    contentDescription = null,
-                    tint = AppColors.Orange,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(
-                    text = "Book Appointment",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AppColors.FontBlackStrong,
-                )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppColors.White)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item(key = "header") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Calendar,
+                        contentDescription = null,
+                        tint = AppColors.Orange,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        text = "Book Appointment",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppColors.FontBlackStrong,
+                    )
+                }
             }
-        }
 
-        item(key = "date_section") {
-            SectionLabel(
-                text = "Select Date",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            // TODO: Backend - replace static dateOptions with real available dates from GET /appointments/availableDates
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(dateOptions.size) { index ->
-                    val isSelected = selectedDateIndex == index
-                    Box(
-                        modifier = Modifier
-                            .border(
-                                width = 1.5.dp,
-                                color = if (isSelected) AppColors.Orange else AppColors.LightGray,
-                                shape = RoundedCornerShape(10.dp),
+            item(key = "date_section") {
+                SectionLabel(
+                    text = "Select Date",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(dateOptions.size) { index ->
+                        val isSelected = selectedDateIndex == index
+                        Box(
+                            modifier = Modifier
+                                .border(
+                                    width = 1.5.dp,
+                                    color = if (isSelected) AppColors.Orange else AppColors.LightGray,
+                                    shape = RoundedCornerShape(10.dp),
+                                )
+                                .background(
+                                    if (isSelected) AppColors.Orange else AppColors.White,
+                                    RoundedCornerShape(10.dp),
+                                )
+                                .clickable { selectedDateIndex = index }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                        ) {
+                            Text(
+                                text = if (index == 0) "Today" else dateOptions[index],
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isSelected) AppColors.White else AppColors.FontBlackMedium,
                             )
-                            .background(
-                                if (isSelected) AppColors.Orange else AppColors.White,
-                                RoundedCornerShape(10.dp),
-                            )
-                            .clickable { selectedDateIndex = index }
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                    ) {
+                        }
+                    }
+                }
+            }
+
+            item(key = "slots_section") {
+                SectionLabel(
+                    text = "Existing Bookings",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    if (occupiedSlots.isEmpty() && !uiState.isLoading) {
                         Text(
-                            text = dateOptions[index],
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (isSelected) AppColors.White else AppColors.FontBlackMedium,
+                            text = "No appointments booked for this date",
+                            fontSize = 14.sp,
+                            color = AppColors.TextHint,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    occupiedSlots.forEach { slot ->
+                        TimeSlotCard(
+                            slot = slot,
+                            isSelected = false,
+                            onSelect = { },
                         )
                     }
                 }
             }
-        }
 
-        item(key = "slots_section") {
-            SectionLabel(
-                text = "Available Time Slots",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            // TODO: Backend - load slots from GET /appointments/availableSlots?date={selectedDate}
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                timeSlots.forEach { slot ->
-                    TimeSlotCard(
-                        slot = slot,
-                        isSelected = selectedSlotId == slot.id,
-                        onSelect = { if (slot.isAvailable) selectedSlotId = slot.id },
+            item(key = "booking_form") {
+                SectionLabel(
+                    text = "Select Vehicle",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (vehicleState.myTrucks.isEmpty() && !vehicleState.isLoading) {
+                        Button(
+                            onClick = { showRegistration = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.OrangeWhite, contentColor = AppColors.Orange)
+                        ) {
+                            Icon(FontAwesomeIcons.Solid.Plus, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Register Your First Vehicle")
+                        }
+                    } else {
+                        var vehicleExpanded by remember { mutableStateOf(false) }
+                        Box {
+                            OutlinedTextField(
+                                value = vehicleState.myTrucks.find { it.truck_id == selectedVehicleId }?.plate_number ?: "Choose Vehicle",
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                trailingIcon = {
+                                    IconButton(onClick = { vehicleExpanded = true }) {
+                                        Icon(FontAwesomeIcons.Solid.ArrowDown, null, modifier = Modifier.size(16.dp))
+                                    }
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = AppColors.Orange,
+                                    unfocusedBorderColor = AppColors.LightGray
+                                )
+                            )
+                            DropdownMenu(expanded = vehicleExpanded, onDismissRequest = { vehicleExpanded = false }) {
+                                vehicleState.myTrucks.forEach { truck ->
+                                    DropdownMenuItem(
+                                        text = { Text("${truck.plate_number}") },
+                                        onClick = {
+                                            selectedVehicleId = truck.truck_id
+                                            vehicleExpanded = false
+                                        }
+                                    )
+                                }
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("Register New Vehicle") },
+                                    onClick = {
+                                        showRegistration = true
+                                        vehicleExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = bookingTime,
+                        onValueChange = { bookingTime = it },
+                        label = { Text("Booking Time") },
+                        placeholder = { Text("e.g. 10:00 AM") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AppColors.Orange,
+                            unfocusedBorderColor = AppColors.LightGray
+                        )
                     )
                 }
             }
-        }
 
-        item(key = "vehicle_section") {
-            SectionLabel(
-                text = "Vehicle Details",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            // TODO: Backend - populate vehicle plate options from GET /truck/getClientTrucks/{clientId}
-            OutlinedTextField(
-                value = vehiclePlate,
-                onValueChange = { vehiclePlate = it },
-                placeholder = {
-                    Text("Vehicle plate number", color = AppColors.TextHint, fontSize = 14.sp)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AppColors.Orange,
-                    unfocusedBorderColor = AppColors.LightGray,
-                    focusedTextColor = AppColors.FontBlackMedium,
-                    unfocusedTextColor = AppColors.FontBlackMedium,
-                    focusedContainerColor = AppColors.White,
-                    unfocusedContainerColor = AppColors.White,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-        }
-
-        item(key = "notes_section") {
-            SectionLabel(
-                text = "Additional Notes",
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                placeholder = {
-                    Text("Describe the issue (optional)", color = AppColors.TextHint, fontSize = 14.sp)
-                },
-                minLines = 3,
-                maxLines = 5,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AppColors.Orange,
-                    unfocusedBorderColor = AppColors.LightGray,
-                    focusedTextColor = AppColors.FontBlackMedium,
-                    unfocusedTextColor = AppColors.FontBlackMedium,
-                    focusedContainerColor = AppColors.White,
-                    unfocusedContainerColor = AppColors.White,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-        }
-
-        item(key = "submit_button") {
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(
-                onClick = {
-                    // TODO: Backend - POST /appointments/book with { clientId, slotId: selectedSlotId, vehiclePlate, notes }
-                    // On success: set bookingConfirmed = true and store returned appointmentId
-                    // On error: show error dialog
-                    if (selectedSlotId != null && vehiclePlate.isNotBlank()) {
-                        bookingConfirmed = true
-                    }
-                },
-                enabled = selectedSlotId != null && vehiclePlate.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Orange,
-                    contentColor = AppColors.White,
-                    disabledContainerColor = AppColors.LightGray,
-                    disabledContentColor = AppColors.TextHint,
-                ),
-            ) {
-                Text(
-                    text = "Confirm Booking",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
+            item(key = "submit_button") {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = {
+                        selectedVehicleId?.let { vId ->
+                            bookingViewModel.createBooking(
+                                token,
+                                userId,
+                                vId,
+                                dateOptions[selectedDateIndex],
+                                bookingTime
+                            )
+                        }
+                    },
+                    enabled = !uiState.isLoading && selectedVehicleId != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.Orange,
+                        contentColor = AppColors.White,
+                        disabledContainerColor = AppColors.LightGray,
+                        disabledContentColor = AppColors.TextHint,
+                    ),
+                ) {
+                    Text(
+                        text = "Confirm Booking",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }
@@ -337,28 +388,6 @@ private fun TimeSlotCard(
                 )
             }
         }
-        if (!slot.isAvailable) {
-            Text(
-                text = "Unavailable",
-                fontSize = 12.sp,
-                color = AppColors.TextHint,
-                fontWeight = FontWeight.Medium,
-            )
-        } else if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .background(AppColors.Orange, RoundedCornerShape(50.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.Check,
-                    contentDescription = "Selected",
-                    tint = AppColors.White,
-                    modifier = Modifier.size(10.dp),
-                )
-            }
-        }
     }
 }
 
@@ -368,9 +397,6 @@ private fun BookingConfirmationView(
     onBookAnother: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO: Backend - poll GET /appointments/status/{appointmentId} every 30s to refresh progress steps
-    // TODO: Backend - or use WebSocket/FCM push notification to update steps in real time
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -463,7 +489,6 @@ private fun AppointmentProgressStep(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // Timeline column: circle + vertical line
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier

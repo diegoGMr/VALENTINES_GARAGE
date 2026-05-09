@@ -51,6 +51,7 @@ fun LoginScreen(
         val role = uiState.role
         if (token != null && id != null && role != null) {
             onLoginSuccess(token, id, role)
+            loginViewModel.resetState()
         }
     }
 
