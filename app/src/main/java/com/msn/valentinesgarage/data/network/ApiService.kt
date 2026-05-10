@@ -142,4 +142,9 @@ interface ApiService {
     suspend fun getAdminUsers(
         @Header("Authorization") token: String,
     ): Response<List<AdminUserRead>>
+
+    @GET("client/my-progress")
+    suspend fun getClientProgress(
+        @Header("Authorization") token: String,
+    ): Response<List<MechanicVisit>>
 }

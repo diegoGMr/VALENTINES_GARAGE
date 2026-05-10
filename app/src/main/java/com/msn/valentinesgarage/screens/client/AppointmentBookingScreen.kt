@@ -65,6 +65,13 @@ fun AppointmentBookingScreen(
     var clientNotes by remember { mutableStateOf("") }
     var bookingConfirmed by remember { mutableStateOf(false) }
     var showRegistration by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
 
     LaunchedEffect(token, selectedDateIndex) {
         if (token.isNotEmpty()) {
@@ -120,235 +127,242 @@ fun AppointmentBookingScreen(
         return
     }
 
-    PullToRefreshBox(
-        isRefreshing = uiState.isLoading || vehicleState.isLoading,
-        onRefresh = {
-            bookingViewModel.loadBookings(token, dateOptions[selectedDateIndex])
-            vehicleViewModel.loadData(token)
-        },
-        modifier = modifier.fillMaxSize()
-    ) {
-        LazyColumn(
-            modifier = Modifier
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent
+    ) { paddingValues ->
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading || vehicleState.isLoading,
+            onRefresh = {
+                bookingViewModel.loadBookings(token, dateOptions[selectedDateIndex])
+                vehicleViewModel.loadData(token)
+            },
+            modifier = modifier
                 .fillMaxSize()
-                .background(AppColors.White)
-                .statusBarsPadding(),
-            contentPadding = PaddingValues(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(paddingValues)
         ) {
-            item(key = "header") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        imageVector = FontAwesomeIcons.Solid.Calendar,
-                        contentDescription = null,
-                        tint = AppColors.Orange,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Text(
-                        text = "Book Appointment",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppColors.FontBlackStrong,
-                    )
-                }
-            }
-
-            item(key = "date_section") {
-                SectionLabel(
-                    text = "Select Date",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(dateOptions.size) { index ->
-                        val isSelected = selectedDateIndex == index
-                        Box(
-                            modifier = Modifier
-                                .border(
-                                    width = 1.5.dp,
-                                    color = if (isSelected) AppColors.Orange else AppColors.LightGray,
-                                    shape = RoundedCornerShape(10.dp),
-                                )
-                                .background(
-                                    if (isSelected) AppColors.Orange else AppColors.White,
-                                    RoundedCornerShape(10.dp),
-                                )
-                                .clickable { selectedDateIndex = index }
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                        ) {
-                            Text(
-                                text = if (index == 0) "Today" else dateOptions[index],
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = if (isSelected) AppColors.White else AppColors.FontBlackMedium,
-                            )
-                        }
-                    }
-                }
-            }
-
-            item(key = "slots_section") {
-                SectionLabel(
-                    text = "Existing Bookings",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (occupiedSlots.isEmpty() && !uiState.isLoading) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(AppColors.White)
+                    .statusBarsPadding(),
+                contentPadding = PaddingValues(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item(key = "header") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Calendar,
+                            contentDescription = null,
+                            tint = AppColors.Orange,
+                            modifier = Modifier.size(18.dp),
+                        )
                         Text(
-                            text = "No appointments booked for this date",
-                            fontSize = 14.sp,
-                            color = AppColors.TextHint,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                    occupiedSlots.forEach { slot ->
-                        TimeSlotCard(
-                            slot = slot,
-                            isSelected = false,
-                            onSelect = { },
+                            text = "Book Appointment",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AppColors.FontBlackStrong,
                         )
                     }
                 }
-            }
 
-            item(key = "booking_form") {
-                SectionLabel(
-                    text = "Select Vehicle",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (vehicleState.myTrucks.isEmpty() && !vehicleState.isLoading) {
-                        Button(
-                            onClick = { showRegistration = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.OrangeWhite, contentColor = AppColors.Orange)
-                        ) {
-                            Icon(FontAwesomeIcons.Solid.Plus, null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Register Your First Vehicle")
-                        }
-                    } else {
-                        var vehicleExpanded by remember { mutableStateOf(false) }
-                        Box {
-                            OutlinedTextField(
-                                value = vehicleState.myTrucks.find { it.truck_id == selectedVehicleId }?.plate_number ?: "Choose Vehicle",
-                                onValueChange = {},
-                                readOnly = true,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                trailingIcon = {
-                                    IconButton(onClick = { vehicleExpanded = true }) {
-                                        Icon(FontAwesomeIcons.Solid.ArrowDown, null, modifier = Modifier.size(16.dp))
-                                    }
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = AppColors.Orange,
-                                    unfocusedBorderColor = AppColors.LightGray
-                                )
-                            )
-                            DropdownMenu(expanded = vehicleExpanded, onDismissRequest = { vehicleExpanded = false }) {
-                                vehicleState.myTrucks.forEach { truck ->
-                                    DropdownMenuItem(
-                                        text = { Text("${truck.plate_number}") },
-                                        onClick = {
-                                            selectedVehicleId = truck.truck_id
-                                            vehicleExpanded = false
-                                        }
+                item(key = "date_section") {
+                    SectionLabel(
+                        text = "Select Date",
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(dateOptions.size) { index ->
+                            val isSelected = selectedDateIndex == index
+                            Box(
+                                modifier = Modifier
+                                    .border(
+                                        width = 1.5.dp,
+                                        color = if (isSelected) AppColors.Orange else AppColors.LightGray,
+                                        shape = RoundedCornerShape(10.dp),
                                     )
-                                }
-                                HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("Register New Vehicle") },
-                                    onClick = {
-                                        showRegistration = true
-                                        vehicleExpanded = false
-                                    }
+                                    .background(
+                                        if (isSelected) AppColors.Orange else AppColors.White,
+                                        RoundedCornerShape(10.dp),
+                                    )
+                                    .clickable { selectedDateIndex = index }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                            ) {
+                                Text(
+                                    text = if (index == 0) "Today" else dateOptions[index],
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isSelected) AppColors.White else AppColors.FontBlackMedium,
                                 )
                             }
                         }
                     }
-
-                    OutlinedTextField(
-                        value = bookingTime,
-                        onValueChange = { bookingTime = it },
-                        label = { Text("Booking Time (HH:mm)") },
-                        placeholder = { Text("e.g. 09:00 or 15:30") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppColors.Orange,
-                            unfocusedBorderColor = AppColors.LightGray
-                        )
-                    )
-
-                    OutlinedTextField(
-                        value = clientNotes,
-                        onValueChange = { clientNotes = it },
-                        label = { Text("Client Notes (Optional)") },
-                        placeholder = { Text("e.g. Please check the brakes specifically.") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        maxLines = 5,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppColors.Orange,
-                            unfocusedBorderColor = AppColors.LightGray
-                        )
-                    )
                 }
-            }
 
-            item(key = "submit_button") {
-                Spacer(modifier = Modifier.height(4.dp))
-                Button(
-                    onClick = {
-                        selectedVehicleId?.let { vId ->
-                            bookingViewModel.createBooking(
-                                token,
-                                userId,
-                                vId,
-                                dateOptions[selectedDateIndex],
-                                bookingTime,
-                                clientNotes.ifBlank { null }
+                item(key = "slots_section") {
+                    SectionLabel(
+                        text = "Existing Bookings",
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        if (occupiedSlots.isEmpty() && !uiState.isLoading) {
+                            Text(
+                                text = "No appointments booked for this date",
+                                fontSize = 14.sp,
+                                color = AppColors.TextHint,
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                    },
-                    enabled = !uiState.isLoading && selectedVehicleId != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Orange,
-                        contentColor = AppColors.White,
-                        disabledContainerColor = AppColors.LightGray,
-                        disabledContentColor = AppColors.TextHint,
-                    ),
-                ) {
-                    Text(
-                        text = "Confirm Booking",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        occupiedSlots.forEach { slot ->
+                            TimeSlotCard(
+                                slot = slot,
+                                isSelected = false,
+                                onSelect = { },
+                            )
+                        }
+                    }
+                }
+
+                item(key = "booking_form") {
+                    SectionLabel(
+                        text = "Select Vehicle",
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        if (vehicleState.myTrucks.isEmpty() && !vehicleState.isLoading) {
+                            Button(
+                                onClick = { showRegistration = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = AppColors.OrangeWhite, contentColor = AppColors.Orange)
+                            ) {
+                                Icon(FontAwesomeIcons.Solid.Plus, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Register Your First Vehicle")
+                            }
+                        } else {
+                            var vehicleExpanded by remember { mutableStateOf(false) }
+                            Box {
+                                OutlinedTextField(
+                                    value = vehicleState.myTrucks.find { it.truck_id == selectedVehicleId }?.plate_number ?: "Choose Vehicle",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    trailingIcon = {
+                                        IconButton(onClick = { vehicleExpanded = true }) {
+                                            Icon(FontAwesomeIcons.Solid.ArrowDown, null, modifier = Modifier.size(16.dp))
+                                        }
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = AppColors.Orange,
+                                        unfocusedBorderColor = AppColors.LightGray
+                                    )
+                                )
+                                DropdownMenu(expanded = vehicleExpanded, onDismissRequest = { vehicleExpanded = false }) {
+                                    vehicleState.myTrucks.forEach { truck ->
+                                        DropdownMenuItem(
+                                            text = { Text("${truck.plate_number}") },
+                                            onClick = {
+                                                selectedVehicleId = truck.truck_id
+                                                vehicleExpanded = false
+                                            }
+                                        )
+                                    }
+                                    HorizontalDivider()
+                                    DropdownMenuItem(
+                                        text = { Text("Register New Vehicle") },
+                                        onClick = {
+                                            showRegistration = true
+                                            vehicleExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = bookingTime,
+                            onValueChange = { bookingTime = it },
+                            label = { Text("Booking Time (HH:mm)") },
+                            placeholder = { Text("e.g. 09:00 or 15:30") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppColors.Orange,
+                                unfocusedBorderColor = AppColors.LightGray
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = clientNotes,
+                            onValueChange = { clientNotes = it },
+                            label = { Text("Client Notes (Optional)") },
+                            placeholder = { Text("e.g. Please check the brakes specifically.") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3,
+                            maxLines = 5,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppColors.Orange,
+                                unfocusedBorderColor = AppColors.LightGray
+                            )
+                        )
+                    }
+                }
+
+                item(key = "submit_button") {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            selectedVehicleId?.let { vId ->
+                                bookingViewModel.createBooking(
+                                    token,
+                                    userId,
+                                    vId,
+                                    dateOptions[selectedDateIndex],
+                                    bookingTime,
+                                    clientNotes.ifBlank { null }
+                                )
+                            }
+                        },
+                        enabled = !uiState.isLoading && selectedVehicleId != null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.Orange,
+                            contentColor = AppColors.White,
+                            disabledContainerColor = AppColors.LightGray,
+                            disabledContentColor = AppColors.TextHint,
+                        ),
+                    ) {
+                        Text(
+                            text = "Confirm Booking",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
             }
         }
@@ -555,6 +569,6 @@ private fun AppointmentProgressStep(
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)
 @Composable
-private fun AppointmentBookingScreenPreview() {
+fun AppointmentBookingScreenPreview() {
     AppointmentBookingScreen()
 }

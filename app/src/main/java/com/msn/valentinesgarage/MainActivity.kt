@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
                             userProfile = UserProfile(
                                 token = sessionManager.getToken() ?: "",
                                 userId = sessionManager.getUserId(),
-                                role = sessionManager.getRole() ?: "mechanic"
+                                role = sessionManager.getRole() ?: "client"
                             )
                             currentScreen = "home"
                         }
@@ -78,7 +78,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             "signup" -> {
-                                SignUpScreen(onLogin = { currentScreen = "login" })
+                                SignUpScreen(
+                                    onLogin = { currentScreen = "login" },
+                                    onSignUpSuccess = { token, id, role ->
+                                        sessionManager.saveSession(token, id, role)
+                                        userProfile = UserProfile(token = token, userId = id, role = role)
+                                        currentScreen = "home"
+                                    }
+                                )
                             }
                             "login" -> {
                                 LoginScreen(

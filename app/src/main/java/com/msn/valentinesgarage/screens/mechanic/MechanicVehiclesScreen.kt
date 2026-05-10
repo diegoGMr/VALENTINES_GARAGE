@@ -1,11 +1,12 @@
 package com.msn.valentinesgarage.screens.mechanic
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -18,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.data.models.MechanicVisit
-import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.screens.mechanic.viewmodels.MechanicVehiclesViewModel
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
@@ -27,6 +27,7 @@ import compose.icons.fontawesomeicons.solid.Car
 import compose.icons.fontawesomeicons.solid.Check
 import compose.icons.fontawesomeicons.solid.ExclamationTriangle
 import compose.icons.fontawesomeicons.solid.Tools
+import kotlinx.coroutines.delay
 
 @Composable
 fun MechanicVehiclesScreen(
@@ -37,6 +38,7 @@ fun MechanicVehiclesScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedVisitForIssue by remember { mutableStateOf<MechanicVisit?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showCompletionOverlay by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -47,6 +49,19 @@ fun MechanicVehiclesScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadAssignedVehicles(token)
+    }
+
+    LaunchedEffect(uiState.visitCompleted) {
+        if (uiState.visitCompleted) {
+            showCompletionOverlay = true
+        }
+    }
+
+    LaunchedEffect(showCompletionOverlay) {
+        if (showCompletionOverlay) {
+            delay(2200)
+            showCompletionOverlay = false
+        }
     }
 
     if (selectedVisitForIssue != null) {
@@ -60,64 +75,119 @@ fun MechanicVehiclesScreen(
         )
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.Transparent
-    ) { paddingValues ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isLoading,
-            onRefresh = { viewModel.loadAssignedVehicles(token) },
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(AppColors.White)
-        ) {
-            LazyColumn(
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            PullToRefreshBox(
+                isRefreshing = uiState.isLoading,
+                onRefresh = { viewModel.loadAssignedVehicles(token) },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(paddingValues)
+                    .background(AppColors.White)
             ) {
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            FontAwesomeIcons.Solid.Tools,
-                            contentDescription = null,
-                            tint = AppColors.Orange,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "Assigned Vehicles",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AppColors.FontBlackStrong
-                        )
-                    }
-                }
-
-                if (uiState.visits.isEmpty() && !uiState.isLoading) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     item {
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(top = 40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No vehicles currently assigned to you.", color = AppColors.TextHint)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                FontAwesomeIcons.Solid.Tools,
+                                contentDescription = null,
+                                tint = AppColors.Orange,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Assigned Vehicles",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AppColors.FontBlackStrong
+                            )
                         }
                     }
-                }
 
-                items(uiState.visits) { visit ->
-                    MechanicVehicleCard(
-                        visit = visit,
-                        onReportIssue = { selectedVisitForIssue = visit },
-                        onCompleteVisit = { viewModel.completeVisit(token, visit.visitId) }
-                    )
+                    if (uiState.visits.isEmpty() && !uiState.isLoading) {
+                        item {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No vehicles currently assigned to you.", color = AppColors.TextHint)
+                            }
+                        }
+                    }
+
+                    items(uiState.visits) { visit ->
+                        MechanicVehicleCard(
+                            visit = visit,
+                            onReportIssue = { selectedVisitForIssue = visit },
+                            onCompleteVisit = { viewModel.completeVisit(token, visit.visitId) }
+                        )
+                    }
                 }
             }
+        }
+
+        AnimatedVisibility(
+            visible = showCompletionOverlay,
+            enter = fadeIn(animationSpec = tween(300)) + scaleIn(
+                initialScale = 0.6f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            ),
+            exit = fadeOut(animationSpec = tween(400)) + scaleOut(targetScale = 0.8f)
+        ) {
+            ServiceCompletionOverlay()
+        }
+    }
+}
+
+@Composable
+private fun ServiceCompletionOverlay() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .background(AppColors.Green, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    FontAwesomeIcons.Solid.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(52.dp)
+                )
+            }
+            Spacer(Modifier.height(20.dp))
+            Text(
+                "Service Completed!",
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "The vehicle has been marked as done.",
+                color = Color.White.copy(alpha = 0.75f),
+                fontSize = 14.sp
+            )
         }
     }
 }
@@ -165,7 +235,7 @@ fun MechanicVehicleCard(
                         )
                     }
                 }
-                
+
                 Button(
                     onClick = onReportIssue,
                     colors = ButtonDefaults.buttonColors(containerColor = AppColors.OrangeWhite, contentColor = AppColors.Orange),
@@ -177,7 +247,7 @@ fun MechanicVehicleCard(
                     Text("Report", fontSize = 12.sp)
                 }
             }
-            
+
             if (!visit.clientNotes.isNullOrBlank()) {
                 Spacer(Modifier.height(12.dp))
                 Box(
@@ -194,17 +264,45 @@ fun MechanicVehicleCard(
                 }
             }
 
+            if (visit.issues.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                val pendingCount = visit.issues.count { it.resolved != true }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (pendingCount == 0) FontAwesomeIcons.Solid.Check else FontAwesomeIcons.Solid.ExclamationTriangle,
+                        null,
+                        tint = if (pendingCount == 0) AppColors.Green else AppColors.Orange,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        if (pendingCount == 0) "All issues resolved" else "$pendingCount pending issue(s)",
+                        fontSize = 12.sp,
+                        color = if (pendingCount == 0) AppColors.Green else AppColors.Orange,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
             Spacer(Modifier.height(16.dp))
-            
+
+            val allResolved = visit.issues.all { it.resolved == true }
             Button(
                 onClick = onCompleteVisit,
+                enabled = allResolved,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Green)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.Green,
+                    disabledContainerColor = AppColors.LightGray
+                )
             ) {
                 Icon(FontAwesomeIcons.Solid.Check, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Complete Service", fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (allResolved) "Complete Service" else "Resolve Issues to Complete",
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

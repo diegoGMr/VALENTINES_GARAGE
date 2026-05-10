@@ -13,7 +13,13 @@ router.post("/registerUser", asyncHandler(async (req, res) => {
   if (!name || !email || !password) return res.status(400).json({ message: "Missing fields" });
 
   const userId = await userService.registerUser({ name, email, password, phone, role });
-  res.status(201).json({ userId });
+
+  // Auto-login: return the same payload as loginUser
+  res.status(201).json({
+    userId,
+    token: userId.toString(),
+    role: role || "client"
+  });
 }));
 
 router.post("/loginUser", asyncHandler(async (req, res) => {

@@ -26,7 +26,6 @@ import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Clock
 import compose.icons.fontawesomeicons.solid.ExclamationTriangle
-import compose.icons.fontawesomeicons.solid.Plus
 import compose.icons.fontawesomeicons.solid.Search
 import compose.icons.fontawesomeicons.solid.Truck
 
@@ -37,7 +36,6 @@ private val issueStatusFilters = listOf("All", "Pending", "Resolved")
 fun IssuesListScreen(
     token: String = "",
     isReadOnly: Boolean = false,
-    onCreateIssue: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: IssuesViewModel = viewModel(),
 ) {
@@ -51,17 +49,6 @@ fun IssuesListScreen(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("All") }
-    var showCreateDialog by remember { mutableStateOf(false) }
-
-    if (showCreateDialog) {
-        CreateIssueDialog(
-            onDismiss = { showCreateDialog = false },
-            onSubmit = { visitId, desc ->
-                viewModel.createIssue(token, visitId, desc)
-                showCreateDialog = false
-            }
-        )
-    }
 
     val filteredIssues = uiState.issues.filter { issue ->
         val matchesSearch = searchQuery.isBlank() ||
@@ -106,34 +93,6 @@ fun IssuesListScreen(
                         fontWeight = FontWeight.Bold,
                         color = AppColors.FontBlackStrong,
                     )
-                }
-                // Create issue button
-                if (!isReadOnly) {
-                    Box(
-                        modifier = Modifier
-                            .background(AppColors.Orange, RoundedCornerShape(10.dp))
-                            .clickable(onClick = { showCreateDialog = true })
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Icon(
-                                imageVector = FontAwesomeIcons.Solid.Plus,
-                                contentDescription = null,
-                                tint = AppColors.White,
-                                modifier = Modifier.size(10.dp),
-                            )
-                            Text(
-                                text = "Report",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = AppColors.White,
-                            )
-                        }
-                    }
                 }
             }
 
@@ -267,49 +226,6 @@ fun IssuesListScreen(
             }
         }
     }
-}
-
-@Composable
-private fun CreateIssueDialog(
-    onDismiss: () -> Unit,
-    onSubmit: (Int, String) -> Unit,
-) {
-    var visitId by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Report New Issue") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = visitId,
-                    onValueChange = { visitId = it },
-                    label = { Text("Visit ID") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { 
-                    val vId = visitId.toIntOrNull()
-                    if (vId != null && description.isNotBlank()) {
-                        onSubmit(vId, description)
-                    }
-                }
-            ) { Text("Submit") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
 }
 
 @Composable

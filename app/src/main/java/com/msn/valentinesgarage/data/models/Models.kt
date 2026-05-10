@@ -37,6 +37,8 @@ data class RegisterRequest(
 
 data class RegisterResponse(
     val userId: Int,
+    val token: String,
+    val role: String,
 )
 
 // ── Client ────────────────────────────────────────────
@@ -75,6 +77,8 @@ data class MechanicVisit(
     @SerializedName("client_notes") val clientNotes: String?,
     @SerializedName("trucks") val truck: Truck?,
     @SerializedName("clients") val client: Client?,
+    val issues: List<Issue> = emptyList(),
+    @SerializedName("completed_trucks") val completedInfo: List<Map<String, Any>>? = null,
 )
 
 data class NewVisitRequest(

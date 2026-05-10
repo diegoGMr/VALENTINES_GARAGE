@@ -71,12 +71,36 @@ router.post("/booking/:id/assign", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN),
   res.status(201).json(visit);
 }));
 
-// Admin routes
-router.get("/my-visits", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
+router.get("/client/my-progress", auth, requireRole(ROLE.CLIENT), asyncHandler(async (req, res) => {
   const { data, error } = await db
     .from("visit")
-    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*)")
+    .select("*, trucks!fk_truck(*, speciality_trucks(name)), issues(*), completed_trucks(visit_id)")
+    .eq("client_id", req.user.userId)
+    .order("visit_id", { ascending: false });
+
+  if (error) throw error;
+  res.json(data);
+}));
+
+// Admin routes
+router.get("/my-visits", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
+  const { data: completed, error: cError } = await db
+    .from("completed_trucks")
+    .select("visit_id");
+  if (cError) throw cError;
+
+  const completedIds = completed?.map(c => c.visit_id) || [];
+
+  let query = db
+    .from("visit")
+    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*), issues(*)")
     .eq("mechanic_id", req.user.userId);
+
+  if (completedIds.length > 0) {
+    query = query.not("visit_id", "in", `(${completedIds.join(",")})`);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   res.json(data);
 }));

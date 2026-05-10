@@ -35,6 +35,8 @@ import compose.icons.fontawesomeicons.solid.Tasks
 import compose.icons.fontawesomeicons.solid.User
 import com.msn.valentinesgarage.screens.mechanic.MechanicVehiclesScreen
 import com.msn.valentinesgarage.screens.mechanic.viewmodels.MechanicVehiclesViewModel
+import com.msn.valentinesgarage.screens.client.ClientProgressScreen
+import com.msn.valentinesgarage.screens.client.viewmodels.ClientProgressViewModel
 
 enum class HomeBottomTab(
     val title: String,
@@ -43,6 +45,7 @@ enum class HomeBottomTab(
     Home(title = "Home", icon = FontAwesomeIcons.Solid.Home),
     Vehicles(title = "Vehicles", icon = FontAwesomeIcons.Solid.Car),
     Booking(title = "Booking", icon = FontAwesomeIcons.Solid.Book),
+    Progress(title = "Progress", icon = FontAwesomeIcons.Solid.Tasks),
     Issues(title = "Issues", icon = FontAwesomeIcons.Solid.Tasks),
     Admin(title = "Admin", icon = FontAwesomeIcons.Solid.User),
     Settings(title = "Settings", icon = FontAwesomeIcons.Solid.Cog),
@@ -52,6 +55,7 @@ private enum class HomeScreenDestination {
     Dashboard,
     Vehicles,
     Booking,
+    Progress,
     Issues,
     VehicleInformation,
     Settings,
@@ -88,7 +92,8 @@ fun HomeScreen(
             add(HomeBottomTab.Home)
             if (role == "mechanic") add(HomeBottomTab.Vehicles)
             if (role != "mechanic") add(HomeBottomTab.Booking)
-            add(HomeBottomTab.Issues)
+            if (role == "client") add(HomeBottomTab.Progress)
+            if (role != "client") add(HomeBottomTab.Issues)
             if (role == "admin") add(HomeBottomTab.Admin)
             add(HomeBottomTab.Settings)
         }
@@ -119,6 +124,7 @@ fun HomeScreen(
                                 HomeBottomTab.Home -> HomeScreenDestination.Dashboard
                                 HomeBottomTab.Vehicles -> HomeScreenDestination.Vehicles
                                 HomeBottomTab.Booking -> HomeScreenDestination.Booking
+                                HomeBottomTab.Progress -> HomeScreenDestination.Progress
                                 HomeBottomTab.Issues -> HomeScreenDestination.Issues
                                 HomeBottomTab.Settings -> HomeScreenDestination.Settings
                                 HomeBottomTab.Admin -> HomeScreenDestination.Admin
@@ -279,6 +285,15 @@ fun HomeScreen(
                 AppointmentBookingScreen(
                     token = token,
                     userId = userId,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = innerPadding.calculateBottomPadding()),
+                )
+            }
+
+            HomeScreenDestination.Progress -> {
+                ClientProgressScreen(
+                    token = token,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = innerPadding.calculateBottomPadding()),

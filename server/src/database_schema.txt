@@ -34,7 +34,7 @@ CREATE TABLE public.issues (
   visit_id integer NOT NULL,
   issue_description character varying,
   mechanic_id integer NOT NULL,
-  issue_resolved? boolean,
+  issue_resolved boolean,
   CONSTRAINT issues_pkey PRIMARY KEY (issue_id),
   CONSTRAINT fk_mechanic FOREIGN KEY (mechanic_id) REFERENCES public.users(user_id),
   CONSTRAINT issues_visit_id_fkey FOREIGN KEY (visit_id) REFERENCES public.visit(visit_id)

@@ -22,6 +22,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,7 @@ import com.msn.valentinesgarage.theme.AppColors
 @Composable
 fun SignUpScreen(
     onLogin: () -> Unit = {},
+    onSignUpSuccess: (token: String, userId: Int, role: String) -> Unit = { _, _, _ -> },
     signUpViewModel: SignUpViewModel = viewModel(),
 ) {
     val uiState by signUpViewModel.uiState.collectAsState()
@@ -56,6 +58,16 @@ fun SignUpScreen(
     val passwordError = signUpViewModel.passwordError()
     val confirmError = signUpViewModel.confirmPasswordError()
     val termsError = if (uiState.hasSubmitted && !uiState.agreedToTerms) "Please agree to terms and conditions" else null
+
+    LaunchedEffect(uiState.token) {
+        val token = uiState.token
+        val id = uiState.userId
+        val role = uiState.role
+        if (token != null && id != null && role != null) {
+            // Give the user a moment to see the success dialog if we want,
+            // but the prompt says "automatically" so we navigate on dismiss below.
+        }
+    }
 
     val showTermsScreen = remember { mutableStateOf(false) }
 
@@ -223,10 +235,14 @@ fun SignUpScreen(
             DialogScreen(
                 dialogType = dialogType,
                 onDismiss = {
+                    val token = uiState.token
+                    val id = uiState.userId
+                    val role = uiState.role
+                    
                     signUpViewModel.dismissDialog()
-                    if (dialogType is DialogType.Success) {
+                    if (dialogType is DialogType.Success && token != null && id != null && role != null) {
                         signUpViewModel.resetState()
-                        onLogin()
+                        onSignUpSuccess(token, id, role)
                     }
                 },
             )

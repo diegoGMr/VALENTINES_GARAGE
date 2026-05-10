@@ -9,10 +9,22 @@ export const visitService = {
   },
 
   async getAllIssues() {
-    const { data, error } = await db
+    // 1. Get visit_ids from completed_trucks to filter them out
+    const { data: completed, error: cError } = await db.from("completed_trucks").select("visit_id");
+    if (cError) throw cError;
+    const completedIds = completed?.map(c => c.visit_id) || [];
+
+    // 2. Query issues
+    let query = db
       .from("issues")
       .select("*, visit(visit_id, trucks!fk_truck(truck_id, license_plate))")
       .order("issue_id", { ascending: false });
+
+    if (completedIds.length > 0) {
+      query = query.not("visit_id", "in", `(${completedIds.join(",")})`);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data;
   },
@@ -49,6 +61,33 @@ export const visitService = {
   },
 
   async createBooking(bookingData) {
+    // 1. Prevent double bookings within 10 minutes
+    const { data: existing, error: eError } = await db
+      .from("bookings")
+      .select("booking_time")
+      .eq("booking_date", bookingData.booking_date);
+
+    if (eError) throw eError;
+
+    const timeToMinutes = (t) => {
+      if (!t) return -100;
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    const newMinutes = timeToMinutes(bookingData.booking_time);
+    const isTooClose = existing.some(b => {
+      const existingMinutes = timeToMinutes(b.booking_time);
+      return Math.abs(newMinutes - existingMinutes) < 10;
+    });
+
+    if (isTooClose) {
+      const err = new Error("Another booking exists within 10 minutes of this time.");
+      err.status = 400;
+      throw err;
+    }
+
+    // 2. Insert the booking
     const preparedData = {
       client_id: bookingData.client_id,
       truck_id: bookingData.truck_id,

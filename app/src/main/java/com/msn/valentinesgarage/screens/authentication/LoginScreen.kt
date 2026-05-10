@@ -135,7 +135,7 @@ fun LoginScreen(
                                 onLoginSuccess(
                                     "dev-token",
                                     1,
-                                    "mechanic",
+                                    "client",
                                 )
                             }
                         }

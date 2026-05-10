@@ -23,6 +23,9 @@ data class SignUpUiState(
     val hasSubmitted: Boolean = false,
     val isLoading: Boolean = false,
     val success: Boolean = false,
+    val token: String? = null,
+    val userId: Int? = null,
+    val role: String? = null,
     val error: String? = null,
     val activeDialog: DialogType? = null,
 )
@@ -138,14 +141,18 @@ class SignUpViewModel : ViewModel() {
                         email = state.email.trim(),
                         password = state.password,
                         phone = null,
-                        role = "mechanic",
+                        role = "client",
                     )
                 )
                 if (response.isSuccessful) {
+                    val body = response.body()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             success = true,
+                            token = body?.token,
+                            userId = body?.userId,
+                            role = body?.role,
                             activeDialog = DialogType.Success(
                                 title = "Account Created",
                                 message = "Your account was created successfully.",
