@@ -34,7 +34,7 @@ class LoginViewModel : ViewModel() {
     fun onEmailChanged(email: String) {
         _uiState.update {
             it.copy(
-                email = email.trimStart(),
+                email = email.trim(),
                 error = null,
             )
         }

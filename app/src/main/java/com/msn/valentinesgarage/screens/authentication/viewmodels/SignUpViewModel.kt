@@ -46,7 +46,7 @@ class SignUpViewModel : ViewModel() {
     }
 
     fun onEmailChanged(value: String) {
-        _uiState.update { it.copy(email = value.trimStart(), error = null) }
+        _uiState.update { it.copy(email = value.trim(), error = null) }
     }
 
     fun onPasswordChanged(value: String) {
