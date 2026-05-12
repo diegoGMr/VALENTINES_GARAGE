@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -158,7 +160,10 @@ fun HomeScreen(
                     onRefresh = { homeViewModel.loadData(token, role, userId) },
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = innerPadding.calculateBottomPadding())
+                        .padding(
+                            top = innerPadding.calculateTopPadding(),
+                            bottom = innerPadding.calculateBottomPadding(),
+                        )
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -176,55 +181,93 @@ fun HomeScreen(
                         }
 
                         if (role == "mechanic") {
-                            item {
-                                SectionLabel(
-                                    text = "My Assigned Vehicles",
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
-                            }
-                            
-                            items(items = state.mechanicVisits, key = { "visit_${it.visitId}" }) { visit ->
-                                val plate = visit.truck?.plate_number ?: "Unknown"
-                                val clientName = visit.client?.full_name ?: "Unknown"
-                                
-                                HomeVehicleTaskCard(
-                                    imageUrl = "",
-                                    title = "Vehicle: $plate",
-                                    subtitle = "Client: $clientName",
-                                    dateText = "Active Visit",
-                                    pendingTasksText = "View Info",
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    onClick = { 
-                                        selectedTab = HomeBottomTab.Vehicles
-                                        currentScreen = HomeScreenDestination.Vehicles 
-                                    },
-                                )
-                            }
-
-                            item {
-                                SectionLabel(
-                                    text = "Unassigned Bookings",
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
-                            }
-
-                            val unassigned = state.bookings?.filter { 
+                            val unassigned = state.bookings?.filter {
                                 it.clientId != null && (it.visit == null || it.visit.isEmpty())
                             } ?: emptyList()
-                            items(items = unassigned, key = { "booking_${it.id}" }) { booking ->
-                                val plate = booking.truck?.plate_number ?: "Vehicle #${booking.truckId}"
-                                val specialty = booking.truck?.speciality?.name ?: ""
-                                val clientName = booking.client?.full_name ?: "Client #${booking.clientId}"
-                                
-                                HomeVehicleTaskCard(
-                                    imageUrl = "",
-                                    title = "Booking: $plate" + (if (specialty.isNotEmpty()) " ($specialty)" else ""),
-                                    subtitle = "Client: $clientName\nDate: ${booking.date} at ${booking.time}",
-                                    dateText = "Pending",
-                                    pendingTasksText = "Claim",
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    onClick = { selectedBookingForClaim = booking },
-                                )
+                            val bothEmpty = state.mechanicVisits.isEmpty() && unassigned.isEmpty()
+
+                            if (!state.isLoading && bothEmpty && state.error == null) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 60.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                                        ) {
+                                            Icon(
+                                                imageVector = FontAwesomeIcons.Solid.Car,
+                                                contentDescription = null,
+                                                tint = AppColors.TextHint,
+                                                modifier = Modifier.size(48.dp),
+                                            )
+                                            Text(
+                                                text = "No vehicles assigned yet",
+                                                color = AppColors.TextHint,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                            Text(
+                                                text = "Claim an unassigned booking to get started",
+                                                color = AppColors.TextHint,
+                                                fontSize = 13.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(horizontal = 32.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (state.mechanicVisits.isNotEmpty()) {
+                                    item {
+                                        SectionLabel(
+                                            text = "My Assigned Vehicles",
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                        )
+                                    }
+                                    items(items = state.mechanicVisits, key = { "visit_${it.visitId}" }) { visit ->
+                                        val plate = visit.truck?.plate_number ?: "Unknown"
+                                        val clientName = visit.client?.full_name ?: "Unknown"
+                                        HomeVehicleTaskCard(
+                                            imageUrl = "",
+                                            title = "Vehicle: $plate",
+                                            subtitle = "Client: $clientName",
+                                            dateText = "Active Visit",
+                                            pendingTasksText = "View Info",
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            onClick = {
+                                                selectedTab = HomeBottomTab.Vehicles
+                                                currentScreen = HomeScreenDestination.Vehicles
+                                            },
+                                        )
+                                    }
+                                }
+
+                                if (unassigned.isNotEmpty()) {
+                                    item {
+                                        SectionLabel(
+                                            text = "Unassigned Bookings",
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                        )
+                                    }
+                                    items(items = unassigned, key = { "booking_${it.id}" }) { booking ->
+                                        val plate = booking.truck?.plate_number ?: "Vehicle #${booking.truckId}"
+                                        val specialty = booking.truck?.speciality?.name ?: ""
+                                        val clientName = booking.client?.full_name ?: "Client #${booking.clientId}"
+                                        HomeVehicleTaskCard(
+                                            imageUrl = "",
+                                            title = "Booking: $plate" + (if (specialty.isNotEmpty()) " ($specialty)" else ""),
+                                            subtitle = "Client: $clientName\nDate: ${booking.date} at ${booking.time}",
+                                            dateText = "Pending",
+                                            pendingTasksText = "Claim",
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            onClick = { selectedBookingForClaim = booking },
+                                        )
+                                    }
+                                }
                             }
                         } else {
                             items(items = state.issues, key = { it.id }) { issue ->
@@ -239,6 +282,16 @@ fun HomeScreen(
                                     onClick = { currentScreen = HomeScreenDestination.VehicleInformation },
                                 )
                             }
+
+                            if (!state.isLoading && state.issues.isEmpty() && state.error == null) {
+                                item {
+                                    Text(
+                                        text = "No issues found in database",
+                                        modifier = Modifier.padding(16.dp),
+                                        color = AppColors.TextHint
+                                    )
+                                }
+                            }
                         }
 
                         state.error?.let { error ->
@@ -247,16 +300,6 @@ fun HomeScreen(
                                     text = error,
                                     color = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.padding(16.dp)
-                                )
-                            }
-                        }
-
-                        if (!state.isLoading && state.issues.isEmpty() && state.error == null) {
-                            item {
-                                Text(
-                                    text = "No issues found in database",
-                                    modifier = Modifier.padding(16.dp),
-                                    color = AppColors.TextHint
                                 )
                             }
                         }
