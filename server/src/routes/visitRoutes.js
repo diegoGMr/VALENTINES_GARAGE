@@ -164,4 +164,9 @@ router.get("/admin/read/users", auth, requireRole(ROLE.ADMIN), asyncHandler(asyn
   res.json(users);
 }));
 
+router.get("/admin/mechanics/history", auth, requireRole(ROLE.ADMIN), asyncHandler(async (_req, res) => {
+  const history = await adminService.getMechanicHistoryByVisit();
+  res.json(history);
+}));
+
 export default router;

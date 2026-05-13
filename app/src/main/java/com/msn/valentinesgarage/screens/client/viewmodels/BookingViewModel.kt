@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.Response
 import java.time.LocalDate
 
 data class BookingUiState(
@@ -30,7 +32,12 @@ class BookingViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     _uiState.update { it.copy(bookings = response.body().orEmpty(), isLoading = false) }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to load bookings") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = extractApiErrorMessage(response, "Failed to load bookings")
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown error") }
@@ -50,7 +57,18 @@ class BookingViewModel : ViewModel() {
                     _uiState.update { it.copy(isLoading = false, bookingSuccess = true) }
                     loadBookings(token, date)
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to create booking") }
+                    val fallback = if (response.code() == 400) {
+                        "Selected slot is already taken. Please choose another time."
+                    } else {
+                        "Failed to create booking"
+                    }
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = extractApiErrorMessage(response, fallback)
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown error") }
@@ -60,5 +78,16 @@ class BookingViewModel : ViewModel() {
 
     fun resetSuccess() {
         _uiState.update { it.copy(bookingSuccess = false) }
+    }
+
+    private fun extractApiErrorMessage(response: Response<*>, fallback: String): String {
+        val raw = response.errorBody()?.string()?.trim().orEmpty()
+        if (raw.isBlank()) return fallback
+
+        return try {
+            JSONObject(raw).optString("message").takeIf { it.isNotBlank() } ?: fallback
+        } catch (_: Exception) {
+            raw.ifBlank { fallback }
+        }
     }
 }

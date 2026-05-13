@@ -208,3 +208,66 @@ data class MechanicWorkloadResponse(
     @SerializedName("openTasks") val openTasks: Int,
     @SerializedName("completedToday") val completedToday: Int
 )
+
+data class AdminMechanicHistoryVisit(
+    @SerializedName("visit_id") val visitId: Int,
+    val booking: AdminMechanicHistoryBooking? = null,
+    val client: AdminMechanicHistoryClient? = null,
+    val truck: AdminMechanicHistoryTruck? = null,
+    @SerializedName("service_notes") val serviceNotes: String? = null,
+    val mechanics: List<AdminMechanicHistoryMechanic> = emptyList(),
+    val issues: List<AdminMechanicHistoryIssue> = emptyList(),
+    val summary: AdminMechanicHistorySummary? = null,
+)
+
+data class AdminMechanicHistoryBooking(
+    @SerializedName("booking_id") val bookingId: Int,
+    @SerializedName("booking_date") val bookingDate: String? = null,
+    @SerializedName("booking_time") val bookingTime: String? = null,
+    @SerializedName("client_notes") val clientNotes: String? = null,
+)
+
+data class AdminMechanicHistoryClient(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("full_name") val fullName: String,
+    val email: String? = null,
+    val phone: String? = null,
+)
+
+data class AdminMechanicHistoryTruck(
+    @SerializedName("truck_id") val truckId: Int,
+    @SerializedName("license_plate") val licensePlate: String,
+    val kilometers: Int? = null,
+    val speciality: String? = null,
+)
+
+data class AdminMechanicHistoryMechanic(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("full_name") val fullName: String,
+    val role: String,
+    val email: String? = null,
+)
+
+data class AdminMechanicHistoryIssue(
+    @SerializedName("issue_id") val issueId: Int,
+    @SerializedName("issue_description") val issueDescription: String,
+    @SerializedName("issue_resolved") val issueResolved: Boolean,
+    @SerializedName("issue_resolution_notes") val issueResolutionNotes: String? = null,
+    val cost: Double? = null,
+    val mechanic: AdminMechanicHistoryIssueMechanic? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+)
+
+data class AdminMechanicHistoryIssueMechanic(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("full_name") val fullName: String,
+)
+
+data class AdminMechanicHistorySummary(
+    @SerializedName("total_issues") val totalIssues: Int,
+    @SerializedName("resolved_issues") val resolvedIssues: Int,
+    @SerializedName("unresolved_issues") val unresolvedIssues: Int,
+    @SerializedName("total_cost") val totalCost: Double,
+    @SerializedName("is_completed") val isCompleted: Boolean,
+)
+

@@ -20,6 +20,7 @@ import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.activities.homeActivity.viewmodels.HomeViewModel
 import com.msn.valentinesgarage.data.models.*
 import com.msn.valentinesgarage.screens.admin.AdminDashboardScreen
+import com.msn.valentinesgarage.screens.admin.AdminMechanicHistoryScreen
 import com.msn.valentinesgarage.screens.client.AppointmentBookingScreen
 import com.msn.valentinesgarage.screens.dialog.FullLoadingScreen
 import com.msn.valentinesgarage.screens.home.composables.HomeHeaderBanner
@@ -64,6 +65,7 @@ private enum class HomeScreenDestination {
     VehicleInformation,
     Settings,
     Admin,
+    AdminHistory,
 }
 
 @Composable
@@ -374,6 +376,17 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(bottom = innerPadding.calculateBottomPadding()),
                     token = token,
+                    onOpenHistory = { currentScreen = HomeScreenDestination.AdminHistory },
+                )
+            }
+
+            HomeScreenDestination.AdminHistory -> {
+                AdminMechanicHistoryScreen(
+                    token = token,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = innerPadding.calculateBottomPadding()),
+                    onBack = { currentScreen = HomeScreenDestination.Admin },
                 )
             }
         }

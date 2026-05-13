@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.data.models.AdminUserRead
 import com.msn.valentinesgarage.data.models.MechanicWorkloadResponse
 import com.msn.valentinesgarage.data.models.RegisterRequest
+import com.msn.valentinesgarage.screens.admin.composables.AdminServiceHistorySection
 import com.msn.valentinesgarage.screens.admin.viewmodels.AdminDashboardViewModel
 import com.msn.valentinesgarage.screens.dialog.FullLoadingScreen
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
@@ -44,6 +45,7 @@ data class AdminStatUi(
 fun AdminDashboardScreen(
     modifier: Modifier = Modifier,
     token: String = "",
+    onOpenHistory: () -> Unit = {},
     viewModel: AdminDashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -129,6 +131,23 @@ fun AdminDashboardScreen(
                         tint = AppColors.FontBlackSoft,
                         modifier = Modifier.size(18.dp),
                     )
+                }
+            }
+
+            item(key = "history_action") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                    TextButton(onClick = onOpenHistory) {
+                        Text(
+                            text = "View Full Mechanic History",
+                            color = AppColors.Orange,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
             }
 
@@ -229,6 +248,20 @@ fun AdminDashboardScreen(
             items(uiState.mechanics, key = { it.id }) { mechanic ->
                 MechanicWorkloadRow(
                     mechanic = mechanic,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            item(key = "service_history_header") {
+                SectionLabel(
+                    text = "Service History",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            item(key = "service_history") {
+                AdminServiceHistorySection(
+                    services = uiState.serviceFlows,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }

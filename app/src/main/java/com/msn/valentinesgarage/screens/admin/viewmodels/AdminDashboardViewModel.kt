@@ -18,10 +18,30 @@ data class AdminDashboardUiState(
     val stats: AdminStatsResponse? = null,
     val mechanics: List<MechanicWorkloadResponse> = emptyList(),
     val users: List<AdminUserRead> = emptyList(),
+    val serviceFlows: List<AdminServiceFlowUi> = emptyList(),
     val dbStats: Map<String, Int> = emptyMap(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val isCreatingUser: Boolean = false,
+)
+
+data class AdminServiceFlowUi(
+    val serviceId: Int,
+    val bookingId: Int?,
+    val mechanicName: String,
+    val mechanicRole: String,
+    val vehicleLabel: String,
+    val clientName: String,
+    val clientNotes: String?,
+    val issues: List<AdminServiceIssueUi>,
+)
+
+data class AdminServiceIssueUi(
+    val issueId: Int,
+    val description: String,
+    val resolved: Boolean,
+    val resolutionNotes: String?,
+    val cost: Double?,
 )
 
 class AdminDashboardViewModel : ViewModel() {
@@ -38,21 +58,39 @@ class AdminDashboardViewModel : ViewModel() {
                     val workloadDeferred = async { RetrofitClient.api.getMechanicWorkload(bearer) }
                     val dbStatsDeferred = async { RetrofitClient.api.getDatabaseStats(bearer) }
                     val usersDeferred = async { RetrofitClient.api.getAdminUsers(bearer) }
+                    val activeVisitsDeferred = async { RetrofitClient.api.getActiveVisits(bearer) }
+                    val issuesDeferred = async { RetrofitClient.api.getIssues(bearer) }
 
                     val statsRes = statsDeferred.await()
                     val workloadRes = workloadDeferred.await()
                     val dbStatsRes = dbStatsDeferred.await()
                     val usersRes = usersDeferred.await()
+                    val activeVisitsRes = activeVisitsDeferred.await()
+                    val issuesRes = issuesDeferred.await()
 
-                    if (statsRes.isSuccessful || workloadRes.isSuccessful || dbStatsRes.isSuccessful || usersRes.isSuccessful) {
+                    val users = if (usersRes.isSuccessful) usersRes.body().orEmpty() else _uiState.value.users
+                    val serviceFlows = buildServiceFlows(
+                        visits = if (activeVisitsRes.isSuccessful) activeVisitsRes.body().orEmpty() else emptyList(),
+                        issues = if (issuesRes.isSuccessful) issuesRes.body().orEmpty() else emptyList(),
+                        users = users,
+                    )
+
+                    if (
+                        statsRes.isSuccessful || workloadRes.isSuccessful || dbStatsRes.isSuccessful ||
+                        usersRes.isSuccessful || activeVisitsRes.isSuccessful || issuesRes.isSuccessful
+                    ) {
                         _uiState.update {
                             it.copy(
                                 stats = if (statsRes.isSuccessful) statsRes.body() else it.stats,
                                 mechanics = if (workloadRes.isSuccessful) workloadRes.body().orEmpty() else it.mechanics,
                                 dbStats = if (dbStatsRes.isSuccessful) dbStatsRes.body().orEmpty() else it.dbStats,
-                                users = if (usersRes.isSuccessful) usersRes.body().orEmpty() else it.users,
+                                users = users,
+                                serviceFlows = serviceFlows,
                                 isLoading = false,
-                                error = if (!statsRes.isSuccessful || !workloadRes.isSuccessful || !dbStatsRes.isSuccessful || !usersRes.isSuccessful) 
+                                error = if (
+                                    !statsRes.isSuccessful || !workloadRes.isSuccessful || !dbStatsRes.isSuccessful ||
+                                    !usersRes.isSuccessful || !activeVisitsRes.isSuccessful || !issuesRes.isSuccessful
+                                )
                                     "Some data could not be loaded" else null
                             )
                         }
@@ -83,5 +121,39 @@ class AdminDashboardViewModel : ViewModel() {
                 _uiState.update { it.copy(isCreatingUser = false) }
             }
         }
+    }
+
+    private fun buildServiceFlows(
+        visits: List<com.msn.valentinesgarage.data.models.MechanicVisit>,
+        issues: List<com.msn.valentinesgarage.data.models.Issue>,
+        users: List<AdminUserRead>,
+    ): List<AdminServiceFlowUi> {
+        val userById = users.associateBy { it.id }
+        val issuesByVisit = issues.groupBy { it.visitId }
+
+        return visits.map { visit ->
+            val mechanicId = visit.mechanicId ?: visit.assignedMechanics.firstOrNull()?.mechanicId
+            val mechanic = mechanicId?.let { userById[it] }
+            val visitIssues = issuesByVisit[visit.visitId].orEmpty()
+
+            AdminServiceFlowUi(
+                serviceId = visit.visitId,
+                bookingId = visit.bookingId,
+                mechanicName = mechanic?.full_name ?: "Mechanic #${mechanicId ?: "Unknown"}",
+                mechanicRole = mechanic?.role ?: "mechanic",
+                vehicleLabel = visit.truck?.plate_number ?: "Vehicle #${visit.truckId ?: "-"}",
+                clientName = visit.client?.full_name ?: "Client #${visit.clientId ?: "-"}",
+                clientNotes = visit.clientNotes,
+                issues = visitIssues.map { issue ->
+                    AdminServiceIssueUi(
+                        issueId = issue.id,
+                        description = issue.description,
+                        resolved = issue.resolved == true,
+                        resolutionNotes = issue.resolutionNotes,
+                        cost = issue.cost,
+                    )
+                }.sortedWith(compareBy<AdminServiceIssueUi> { it.resolved }.thenBy { it.issueId })
+            )
+        }.sortedByDescending { it.serviceId }
     }
 }

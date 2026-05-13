@@ -29,6 +29,8 @@ import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.*
+import kotlin.math.abs
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 // UI model for a bookable time slot
@@ -64,12 +66,13 @@ fun AppointmentBookingScreen(
     }
 
     var selectedVehicleId by remember { mutableStateOf<Int?>(null) }
-    var bookingTime by remember { mutableStateOf("09:00") }
+    var bookingTime by remember { mutableStateOf("") }
     var clientNotes by remember { mutableStateOf("") }
     var kilometersText by remember { mutableStateOf("") }
     var bookingConfirmed by remember { mutableStateOf(false) }
     var showRegistration by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -114,6 +117,32 @@ fun AppointmentBookingScreen(
             period = "Booked",
             isAvailable = false
         )
+    }
+
+    val allDailySlots = remember { generateBookingSlots() }
+    val bookableSlots = remember(uiState.bookings) {
+        allDailySlots.map { slotTime ->
+            val slotMinutes = timeToMinutesOrNull(slotTime) ?: -1
+            val isConflicting = uiState.bookings.any { booking ->
+                val bookedMinutes = timeToMinutesOrNull(booking.time)
+                bookedMinutes != null && slotMinutes >= 0 && abs(slotMinutes - bookedMinutes) < 10
+            }
+
+            TimeSlotUi(
+                id = slotTime,
+                label = slotTime,
+                period = periodForSlot(slotTime),
+                isAvailable = !isConflicting,
+            )
+        }
+    }
+
+    val selectedTimeMinutes = remember(bookingTime) { timeToMinutesOrNull(bookingTime) }
+    val hasTimeConflict = remember(selectedTimeMinutes, uiState.bookings) {
+        selectedTimeMinutes != null && uiState.bookings.any { booking ->
+            val bookedMinutes = timeToMinutesOrNull(booking.time)
+            bookedMinutes != null && abs(selectedTimeMinutes - bookedMinutes) < 10
+        }
     }
 
     val progressSteps = listOf(
@@ -322,17 +351,42 @@ fun AppointmentBookingScreen(
 
                         OutlinedTextField(
                             value = bookingTime,
-                            onValueChange = { bookingTime = it },
-                            label = { Text("Booking Time (HH:mm)") },
-                            placeholder = { Text("e.g. 09:00 or 15:30") },
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Booking Time") },
+                            placeholder = { Text("Select an available slot below") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
+                            isError = hasTimeConflict,
+                            supportingText = {
+                                if (hasTimeConflict) {
+                                    Text("This slot is already taken (or within 10 minutes). Choose another time.")
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = AppColors.Orange,
                                 unfocusedBorderColor = AppColors.LightGray
                             )
                         )
+
+                        Text(
+                            text = "Available Time Slots",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppColors.FontBlackMedium,
+                        )
+
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(bookableSlots.size) { index ->
+                                val slot = bookableSlots[index]
+                                BookingSlotChip(
+                                    slot = slot,
+                                    isSelected = slot.label == bookingTime,
+                                    onSelect = { bookingTime = slot.label },
+                                )
+                            }
+                        }
 
                         OutlinedTextField(
                             value = clientNotes,
@@ -355,6 +409,14 @@ fun AppointmentBookingScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(
                         onClick = {
+                            if (hasTimeConflict) {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "This slot is already taken. Please choose another time."
+                                    )
+                                }
+                                return@Button
+                            }
                             selectedVehicleId?.let { vId ->
                                 bookingViewModel.createBooking(
                                     token,
@@ -367,7 +429,7 @@ fun AppointmentBookingScreen(
                                 )
                             }
                         },
-                        enabled = !uiState.isLoading && selectedVehicleId != null,
+                        enabled = !uiState.isLoading && selectedVehicleId != null && bookingTime.isNotBlank() && !hasTimeConflict,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
@@ -386,10 +448,68 @@ fun AppointmentBookingScreen(
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
+
+                    if (hasTimeConflict) {
+                        Text(
+                            text = "Selected time is unavailable. Pick a different slot.",
+                            color = AppColors.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 6.dp)
+                        )
+                    }
+
+                    if (bookingTime.isBlank()) {
+                        Text(
+                            text = "Please select a booking time slot.",
+                            color = AppColors.TextHint,
+                            fontSize = 12.sp,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+private fun generateBookingSlots(
+    startHour: Int = 8,
+    endHour: Int = 17,
+): List<String> {
+    val slots = mutableListOf<String>()
+    for (hour in startHour..endHour) {
+        slots += "%02d:00".format(hour)
+        if (hour != endHour) {
+            slots += "%02d:30".format(hour)
+        }
+    }
+    return slots
+}
+
+private fun periodForSlot(time: String): String {
+    val hour = time.substringBefore(":").toIntOrNull() ?: return "Day"
+    return when {
+        hour < 12 -> "Morning"
+        hour < 17 -> "Afternoon"
+        else -> "Evening"
+    }
+}
+
+private fun timeToMinutesOrNull(value: String?): Int? {
+    if (value.isNullOrBlank()) return null
+
+    val parts = value.trim().split(":")
+    if (parts.size < 2) return null
+
+    val hour = parts[0].toIntOrNull() ?: return null
+    val minute = parts[1].take(2).toIntOrNull() ?: return null
+    if (hour !in 0..23 || minute !in 0..59) return null
+
+    return hour * 60 + minute
 }
 
 @Composable
@@ -442,6 +562,45 @@ private fun TimeSlotCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun BookingSlotChip(
+    slot: TimeSlotUi,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+) {
+    val borderColor = when {
+        isSelected -> AppColors.Orange
+        !slot.isAvailable -> AppColors.LightGray
+        else -> AppColors.LightGray
+    }
+    val containerColor = when {
+        isSelected -> AppColors.OrangeWhite
+        else -> AppColors.White
+    }
+
+    Column(
+        modifier = Modifier
+            .border(1.5.dp, borderColor, RoundedCornerShape(10.dp))
+            .background(containerColor, RoundedCornerShape(10.dp))
+            .clickable(enabled = slot.isAvailable, onClick = onSelect)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text = slot.label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (slot.isAvailable) AppColors.FontBlackStrong else AppColors.TextHint,
+        )
+        Text(
+            text = if (slot.isAvailable) slot.period else "Booked",
+            fontSize = 10.sp,
+            color = if (slot.isAvailable) AppColors.TextHint else AppColors.Red,
+        )
     }
 }
 
