@@ -182,9 +182,10 @@ fun HomeScreen(
 
                         if (role == "mechanic") {
                             val unassigned = state.bookings?.filter {
-                                it.clientId != null && (it.visit == null || it.visit.isEmpty())
+                                it.clientId != null && it.visit.isNullOrEmpty()
                             } ?: emptyList()
-                            val bothEmpty = state.mechanicVisits.isEmpty() && unassigned.isEmpty()
+                            // Only show "nothing assigned" when bookings actually loaded (not null = API failed)
+                            val bothEmpty = state.mechanicVisits.isEmpty() && unassigned.isEmpty() && state.bookings != null
 
                             if (!state.isLoading && bothEmpty && state.error == null) {
                                 item {
@@ -249,7 +250,7 @@ fun HomeScreen(
                                 if (unassigned.isNotEmpty()) {
                                     item {
                                         SectionLabel(
-                                            text = "Unassigned Bookings",
+                                            text = "Available Bookings",
                                             modifier = Modifier.padding(horizontal = 16.dp),
                                         )
                                     }

@@ -14,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -68,8 +70,8 @@ fun MechanicVehiclesScreen(
         ReportIssueDialog(
             visit = selectedVisitForIssue!!,
             onDismiss = { selectedVisitForIssue = null },
-            onReport = { description ->
-                viewModel.reportIssue(token, selectedVisitForIssue!!.visitId, description)
+            onReport = { description, cost ->
+                viewModel.reportIssue(token, selectedVisitForIssue!!.visitId, description, cost)
                 selectedVisitForIssue = null
             }
         )
@@ -105,7 +107,7 @@ fun MechanicVehiclesScreen(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Assigned Vehicles",
+                                "Active Vehicles",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AppColors.FontBlackStrong
@@ -121,7 +123,7 @@ fun MechanicVehiclesScreen(
                                     .padding(top = 40.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("No vehicles currently assigned to you.", color = AppColors.TextHint)
+                                Text("No active vehicles in service.", color = AppColors.TextHint)
                             }
                         }
                     }
@@ -312,9 +314,10 @@ fun MechanicVehicleCard(
 fun ReportIssueDialog(
     visit: MechanicVisit,
     onDismiss: () -> Unit,
-    onReport: (String) -> Unit
+    onReport: (description: String, cost: Double?) -> Unit
 ) {
     var description by remember { mutableStateOf("") }
+    var costText by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -330,11 +333,24 @@ fun ReportIssueDialog(
                     placeholder = { Text("e.g. Brake pads worn out") },
                     minLines = 3
                 )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = costText,
+                    onValueChange = { costText = it.filter { c -> c.isDigit() || c == '.' } },
+                    label = { Text("Estimated Cost (Optional)") },
+                    placeholder = { Text("e.g. 350.00") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { if (description.isNotBlank()) onReport(description) },
+                onClick = {
+                    if (description.isNotBlank())
+                        onReport(description, costText.toDoubleOrNull())
+                },
                 enabled = description.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Orange)
             ) {

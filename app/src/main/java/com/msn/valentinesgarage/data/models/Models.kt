@@ -69,16 +69,22 @@ data class ClientVisit(
     @SerializedName("client_notes") val client_notes: String?,
 )
 
+data class VisitMechanic(
+    @SerializedName("mechanic_id") val mechanicId: Int,
+)
+
 data class MechanicVisit(
     @SerializedName("visit_id") val visitId: Int,
     @SerializedName("client_id") val clientId: Int?,
     @SerializedName("truck_id") val truckId: Int?,
     @SerializedName("mechanic_id") val mechanicId: Int?,
+    @SerializedName("booking_id") val bookingId: Int?,
     @SerializedName("client_notes") val clientNotes: String?,
     @SerializedName("trucks") val truck: Truck?,
     @SerializedName("clients") val client: Client?,
     val issues: List<Issue> = emptyList(),
     @SerializedName("completed_trucks") val completedInfo: List<Map<String, Any>>? = null,
+    @SerializedName("visit_mechanics") val assignedMechanics: List<VisitMechanic> = emptyList(),
 )
 
 data class NewVisitRequest(
@@ -139,6 +145,7 @@ data class CreateBookingRequest(
     @SerializedName("booking_date") val date: String,
     @SerializedName("booking_time") val time: String,
     @SerializedName("client_notes") val clientNotes: String?,
+    val kilometers: Int? = null,
 )
 
 data class CreateBookingResponse(
@@ -151,10 +158,16 @@ data class Issue(
     @SerializedName("visit_id") val visitId: Int,
     @SerializedName("issue_description") val description: String,
     @SerializedName("mechanic_id") val mechanicId: Int,
-    @SerializedName("issue_resolved?") val resolved: Boolean? = false,
+    @SerializedName("issue_resolved") val resolved: Boolean? = false,
+    val cost: Double? = null,
+    @SerializedName("issue_resolution_notes") val resolutionNotes: String? = null,
     @SerializedName("created_at") val created_at: String? = null,
     val status: String? = null,
     val visit: IssueVisit? = null,
+)
+
+data class ResolveIssueRequest(
+    @SerializedName("resolution_notes") val resolutionNotes: String?,
 )
 
 data class IssueVisit(
@@ -166,6 +179,7 @@ data class CreateIssueRequest(
     @SerializedName("visit_id") val visitId: Int,
     @SerializedName("issue_description") val description: String,
     @SerializedName("mechanic_id") val mechanicId: Int? = null,
+    val cost: Double? = null,
 )
 
 data class CreateIssueResponse(

@@ -55,6 +55,7 @@ fun SignUpScreen(
     val uiState by signUpViewModel.uiState.collectAsState()
     val fullNameError = signUpViewModel.fullNameError()
     val emailError = signUpViewModel.emailError()
+    val phoneError = signUpViewModel.phoneError()
     val passwordError = signUpViewModel.passwordError()
     val confirmError = signUpViewModel.confirmPasswordError()
     val termsError = if (uiState.hasSubmitted && !uiState.agreedToTerms) "Please agree to terms and conditions" else null
@@ -146,6 +147,18 @@ fun SignUpScreen(
                     keyboardType = KeyboardType.Email,
                     isError = emailError != null,
                     errorText = emailError,
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                AuthTextField(
+                    value = uiState.phone,
+                    onValueChange = signUpViewModel::onPhoneChanged,
+                    onFocusChanged = signUpViewModel::onPhoneFocusChanged,
+                    placeholder = "Phone number (10 digits)",
+                    keyboardType = KeyboardType.Phone,
+                    isError = phoneError != null,
+                    errorText = phoneError,
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))

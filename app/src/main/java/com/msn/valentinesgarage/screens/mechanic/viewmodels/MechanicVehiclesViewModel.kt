@@ -26,11 +26,11 @@ class MechanicVehiclesViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, visitCompleted = false) }
             try {
-                val response = RetrofitClient.api.getMechanicVisits("Bearer $token")
+                val response = RetrofitClient.api.getActiveVisits("Bearer $token")
                 if (response.isSuccessful) {
                     _uiState.update { it.copy(visits = response.body().orEmpty(), isLoading = false) }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to load assigned vehicles") }
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to load vehicles") }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown error") }
@@ -38,13 +38,13 @@ class MechanicVehiclesViewModel : ViewModel() {
         }
     }
 
-    fun reportIssue(token: String, visitId: Int, description: String) {
+    fun reportIssue(token: String, visitId: Int, description: String, cost: Double? = null) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, issueCreated = false) }
             try {
                 val res = RetrofitClient.api.createIssue(
                     "Bearer $token",
-                    CreateIssueRequest(visitId, description)
+                    CreateIssueRequest(visitId, description, cost = cost)
                 )
                 if (res.isSuccessful) {
                     _uiState.update { it.copy(isLoading = false, issueCreated = true) }

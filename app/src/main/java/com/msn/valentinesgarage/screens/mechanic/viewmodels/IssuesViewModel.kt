@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.msn.valentinesgarage.data.models.CreateIssueRequest
 import com.msn.valentinesgarage.data.models.Issue
+import com.msn.valentinesgarage.data.models.ResolveIssueRequest
 import com.msn.valentinesgarage.data.network.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,11 +56,13 @@ class IssuesViewModel : ViewModel() {
         }
     }
 
-    fun resolveIssue(token: String, issueId: Int) {
+    fun resolveIssue(token: String, issueId: Int, notes: String?) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val res = RetrofitClient.api.resolveIssue("Bearer $token", issueId)
+                val res = RetrofitClient.api.resolveIssue(
+                    "Bearer $token", issueId, ResolveIssueRequest(notes?.ifBlank { null })
+                )
                 if (res.isSuccessful) {
                     loadIssues(token)
                 } else {

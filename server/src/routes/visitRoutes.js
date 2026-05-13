@@ -17,21 +17,23 @@ router.get("/issues", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler
 }));
 
 router.post("/issues", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
-  const { visit_id, issue_description, mechanic_id } = req.body;
+  const { visit_id, issue_description, mechanic_id, cost } = req.body;
   if (!visit_id || !issue_description) return res.status(400).json({ message: "Missing fields" });
 
   const issue = await visitService.createIssue({
     visit_id,
     issue_description,
     mechanic_id: mechanic_id || req.user.userId,
-    issue_resolved: false
+    issue_resolved: false,
+    cost: cost != null ? parseFloat(cost) : null
   });
   res.status(201).json({ issueId: issue.issue_id });
 }));
 
 router.put("/issues/:id/resolve", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
   const issueId = req.params.id;
-  const issue = await visitService.resolveIssue(issueId);
+  const { resolution_notes } = req.body;
+  const issue = await visitService.resolveIssue(issueId, resolution_notes);
   res.json(issue);
 }));
 
@@ -49,8 +51,17 @@ router.get("/booking", auth, asyncHandler(async (req, res) => {
   res.json(bookings);
 }));
 
+router.get("/bookings/available", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
+  const { data, error } = await db
+    .from("bookings")
+    .select("*, clients!bookings_client_id_fkey(full_name), trucks(*, speciality_trucks(name)), visit(booking_id)")
+    .order("booking_date", { ascending: false });
+  if (error) throw error;
+  res.json(data);
+}));
+
 router.post("/booking", auth, asyncHandler(async (req, res) => {
-  const { client_id, truck_id, booking_date, booking_time, client_notes } = req.body;
+  const { client_id, truck_id, booking_date, booking_time, client_notes, kilometers } = req.body;
   if (!client_id || !truck_id || !booking_date) return res.status(400).json({ message: "Missing fields" });
 
   const booking = await visitService.createBooking({
@@ -58,7 +69,8 @@ router.post("/booking", auth, asyncHandler(async (req, res) => {
     truck_id,
     booking_date,
     booking_time,
-    client_notes
+    client_notes,
+    kilometers: kilometers != null ? parseInt(kilometers, 10) : null
   });
   res.status(201).json(booking);
 }));
@@ -82,6 +94,25 @@ router.get("/client/my-progress", auth, requireRole(ROLE.CLIENT), asyncHandler(a
   res.json(data);
 }));
 
+router.get("/visits/active", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
+  const { data: completed, error: cError } = await db.from("completed_trucks").select("visit_id");
+  if (cError) throw cError;
+
+  const completedIds = completed?.map(c => c.visit_id) || [];
+
+  let query = db
+    .from("visit")
+    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*), issues(*), visit_mechanics(mechanic_id)");
+
+  if (completedIds.length > 0) {
+    query = query.not("visit_id", "in", `(${completedIds.join(",")})`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  res.json(data);
+}));
+
 // Admin routes
 router.get("/my-visits", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHandler(async (req, res) => {
   const { data: completed, error: cError } = await db
@@ -91,16 +122,24 @@ router.get("/my-visits", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHand
 
   const completedIds = completed?.map(c => c.visit_id) || [];
 
-  let query = db
-    .from("visit")
-    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*), issues(*)")
+  // Look up this mechanic's visits via the junction table
+  const { data: myEntries, error: vmError } = await db
+    .from("visit_mechanics")
+    .select("visit_id")
     .eq("mechanic_id", req.user.userId);
+  if (vmError) throw vmError;
 
-  if (completedIds.length > 0) {
-    query = query.not("visit_id", "in", `(${completedIds.join(",")})`);
-  }
+  const myVisitIds = myEntries?.map(e => e.visit_id) || [];
+  if (myVisitIds.length === 0) return res.json([]);
 
-  const { data, error } = await query;
+  const activeIds = myVisitIds.filter(id => !completedIds.includes(id));
+  if (activeIds.length === 0) return res.json([]);
+
+  const { data, error } = await db
+    .from("visit")
+    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*), issues(*), visit_mechanics(mechanic_id)")
+    .in("visit_id", activeIds);
+
   if (error) throw error;
   res.json(data);
 }));

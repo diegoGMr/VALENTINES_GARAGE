@@ -81,6 +81,11 @@ interface ApiService {
         @Query("date") date: String,
     ): Response<List<Booking>>
 
+    @GET("bookings/available")
+    suspend fun getAvailableBookings(
+        @Header("Authorization") token: String,
+    ): Response<List<Booking>>
+
     @POST("booking")
     suspend fun createBooking(
         @Header("Authorization") token: String,
@@ -104,6 +109,11 @@ interface ApiService {
         @Header("Authorization") token: String,
     ): Response<List<MechanicVisit>>
 
+    @GET("visits/active")
+    suspend fun getActiveVisits(
+        @Header("Authorization") token: String,
+    ): Response<List<MechanicVisit>>
+
     @POST("issues")
     suspend fun createIssue(
         @Header("Authorization") token: String,
@@ -114,6 +124,7 @@ interface ApiService {
     suspend fun resolveIssue(
         @Header("Authorization") token: String,
         @Path("id") issueId: Int,
+        @Body request: ResolveIssueRequest,
     ): Response<Issue>
 
     @POST("visits/{id}/complete")

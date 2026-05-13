@@ -13,11 +13,13 @@ import kotlinx.coroutines.launch
 data class SignUpUiState(
     val fullName: String = "",
     val email: String = "",
+    val phone: String = "",
     val password: String = "",
     val confirmPassword: String = "",
     val agreedToTerms: Boolean = false,
     val isFullNameTouched: Boolean = false,
     val isEmailTouched: Boolean = false,
+    val isPhoneTouched: Boolean = false,
     val isPasswordTouched: Boolean = false,
     val isConfirmPasswordTouched: Boolean = false,
     val hasSubmitted: Boolean = false,
@@ -47,6 +49,15 @@ class SignUpViewModel : ViewModel() {
 
     fun onEmailChanged(value: String) {
         _uiState.update { it.copy(email = value.trim(), error = null) }
+    }
+
+    fun onPhoneChanged(value: String) {
+        val digits = value.filter { it.isDigit() }.take(10)
+        _uiState.update { it.copy(phone = digits, error = null) }
+    }
+
+    fun onPhoneFocusChanged(isFocused: Boolean) {
+        if (!isFocused) _uiState.update { it.copy(isPhoneTouched = true) }
     }
 
     fun onPasswordChanged(value: String) {
@@ -88,6 +99,12 @@ class SignUpViewModel : ViewModel() {
         return null
     }
 
+    private fun phoneErrorFor(phone: String): String? {
+        if (phone.isBlank()) return "Phone number is required"
+        if (phone.length != 10) return "Phone number must be exactly 10 digits"
+        return null
+    }
+
     private fun emailErrorFor(email: String): String? {
         if (email.isBlank()) return "Email is required"
         if (!emailRegex.matches(email.trim())) return "Invalid email format"
@@ -110,15 +127,16 @@ class SignUpViewModel : ViewModel() {
         val state = _uiState.value
         val nameError = fullNameErrorFor(state.fullName)
         val emailError = emailErrorFor(state.email)
+        val phoneError = phoneErrorFor(state.phone)
         val passwordError = passwordErrorFor(state.password)
         val confirmError = confirmPasswordErrorFor(state.password, state.confirmPassword)
         val termsError = if (!state.agreedToTerms) "Please agree to terms and conditions" else null
 
-        if (nameError != null || emailError != null || passwordError != null || confirmError != null || termsError != null) {
+        if (nameError != null || emailError != null || phoneError != null || passwordError != null || confirmError != null || termsError != null) {
             _uiState.update {
                 it.copy(
                     hasSubmitted = true,
-                    error = nameError ?: emailError ?: passwordError ?: confirmError ?: termsError,
+                    error = nameError ?: emailError ?: phoneError ?: passwordError ?: confirmError ?: termsError,
                 )
             }
             return
@@ -140,7 +158,7 @@ class SignUpViewModel : ViewModel() {
                         name = state.fullName.trim(),
                         email = state.email.trim(),
                         password = state.password,
-                        phone = null,
+                        phone = state.phone,
                         role = "client",
                     )
                 )
@@ -202,6 +220,12 @@ class SignUpViewModel : ViewModel() {
         return emailErrorFor(state.email)
     }
 
+    fun phoneError(): String? {
+        val state = _uiState.value
+        if (!state.isPhoneTouched && !state.hasSubmitted) return null
+        return phoneErrorFor(state.phone)
+    }
+
     fun passwordError(): String? {
         val state = _uiState.value
         if (!state.isPasswordTouched && !state.hasSubmitted) return null
@@ -218,6 +242,7 @@ class SignUpViewModel : ViewModel() {
         val state = _uiState.value
         return fullNameErrorFor(state.fullName) == null &&
                 emailErrorFor(state.email) == null &&
+                phoneErrorFor(state.phone) == null &&
                 passwordErrorFor(state.password) == null &&
                 confirmPasswordErrorFor(state.password, state.confirmPassword) == null &&
                 state.agreedToTerms

@@ -15,9 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.screens.client.viewmodels.BookingViewModel
 import com.msn.valentinesgarage.screens.client.viewmodels.VehicleViewModel
@@ -63,6 +65,7 @@ fun AppointmentBookingScreen(
     var selectedVehicleId by remember { mutableStateOf<Int?>(null) }
     var bookingTime by remember { mutableStateOf("09:00") }
     var clientNotes by remember { mutableStateOf("") }
+    var kilometersText by remember { mutableStateOf("") }
     var bookingConfirmed by remember { mutableStateOf(false) }
     var showRegistration by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -282,6 +285,7 @@ fun AppointmentBookingScreen(
                                             text = { Text("${truck.plate_number}") },
                                             onClick = {
                                                 selectedVehicleId = truck.truck_id
+                                                kilometersText = truck.kilometers?.toString() ?: ""
                                                 vehicleExpanded = false
                                             }
                                         )
@@ -297,6 +301,21 @@ fun AppointmentBookingScreen(
                                 }
                             }
                         }
+
+                        OutlinedTextField(
+                            value = kilometersText,
+                            onValueChange = { kilometersText = it.filter { c -> c.isDigit() } },
+                            label = { Text("Current Kilometers") },
+                            placeholder = { Text("e.g. 120000") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppColors.Orange,
+                                unfocusedBorderColor = AppColors.LightGray
+                            )
+                        )
 
                         OutlinedTextField(
                             value = bookingTime,
@@ -340,7 +359,8 @@ fun AppointmentBookingScreen(
                                     vId,
                                     dateOptions[selectedDateIndex],
                                     bookingTime,
-                                    clientNotes.ifBlank { null }
+                                    clientNotes.ifBlank { null },
+                                    kilometersText.toIntOrNull()
                                 )
                             }
                         },

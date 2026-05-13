@@ -34,17 +34,20 @@ export const visitService = {
       visit_id: issueData.visit_id,
       issue_description: issueData.issue_description,
       mechanic_id: issueData.mechanic_id,
-      "issue_resolved?": issueData.issue_resolved ?? false
+      "issue_resolved": issueData.issue_resolved ?? false,
+      ...(issueData.cost != null && { cost: issueData.cost })
     };
     const { data, error } = await db.from("issues").insert([preparedData]).select();
     if (error) throw error;
     return data[0];
   },
 
-  async resolveIssue(issueId) {
+  async resolveIssue(issueId, resolutionNotes) {
+    const updateData = { issue_resolved: true };
+    if (resolutionNotes) updateData.issue_resolution_notes = resolutionNotes;
     const { data, error } = await db
       .from("issues")
-      .update({ "issue_resolved?": true })
+      .update(updateData)
       .eq("issue_id", issueId)
       .select();
     if (error) throw error;
@@ -54,7 +57,7 @@ export const visitService = {
   async getBookings(date) {
     const { data, error } = await db
       .from("bookings")
-      .select("*, clients!bookings_client_id_fkey(full_name), trucks!bookings_vehicle_id_fkey(*, speciality_trucks(name)), visit(booking_id)")
+      .select("*, clients!bookings_client_id_fkey(full_name), trucks(*, speciality_trucks(name)), visit(booking_id)")
       .eq("booking_date", date);
     if (error) throw error;
     return data;
@@ -87,7 +90,16 @@ export const visitService = {
       throw err;
     }
 
-    // 2. Insert the booking
+    // 2. Update truck kilometers if provided
+    if (bookingData.kilometers != null) {
+      const { error: kError } = await db
+        .from("trucks")
+        .update({ kilometers: bookingData.kilometers })
+        .eq("truck_id", bookingData.truck_id);
+      if (kError) throw kError;
+    }
+
+    // 3. Insert the booking
     const preparedData = {
       client_id: bookingData.client_id,
       truck_id: bookingData.truck_id,
@@ -101,20 +113,39 @@ export const visitService = {
   },
 
   async assignMechanicToBooking(bookingId, mechanicId) {
-    // 1. Get booking details
-    const { data: booking, error: bError } = await db.from("bookings").select("*").eq("booking_id", bookingId).single();
-    if (bError) throw bError;
+    // 1. Check if a visit already exists for this booking
+    const { data: existingVisit, error: eError } = await db
+      .from("visit")
+      .select("visit_id")
+      .eq("booking_id", bookingId)
+      .maybeSingle();
+    if (eError) throw eError;
 
-    // 2. Create a visit record linked to the booking
-    const visitData = {
-      client_id: booking.client_id,
-      truck_id: booking.truck_id,
-      mechanic_id: mechanicId,
-      booking_id: bookingId,
-      client_notes: booking.client_notes || `From booking #${bookingId}`
-    };
+    let visitId;
+    if (existingVisit) {
+      visitId = existingVisit.visit_id;
+    } else {
+      // 2. Create the visit for this booking
+      const { data: booking, error: bError } = await db.from("bookings").select("*").eq("booking_id", bookingId).single();
+      if (bError) throw bError;
 
-    return await this.createVisit(visitData);
+      const visit = await this.createVisit({
+        client_id: booking.client_id,
+        truck_id: booking.truck_id,
+        mechanic_id: mechanicId,
+        booking_id: bookingId,
+        client_notes: booking.client_notes || `From booking #${bookingId}`
+      });
+      visitId = visit.visit_id;
+    }
+
+    // 3. Add mechanic to visit_mechanics (upsert ignores duplicates)
+    const { error: vmError } = await db
+      .from("visit_mechanics")
+      .upsert([{ visit_id: visitId, mechanic_id: mechanicId }]);
+    if (vmError) throw vmError;
+
+    return { visit_id: visitId, mechanic_id: mechanicId };
   },
 
   async completeVisit(visitId) {
@@ -127,7 +158,7 @@ export const visitService = {
       .from("issues")
       .select("issue_id")
       .eq("visit_id", visitId)
-      .eq("issue_resolved?", false);
+      .eq("issue_resolved", false);
 
     if (iError) throw iError;
     if (unresolved && unresolved.length > 0) {

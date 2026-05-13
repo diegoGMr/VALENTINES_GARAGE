@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.msn.valentinesgarage.data.models.*
 import com.msn.valentinesgarage.data.network.RetrofitClient
+import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 data class HomeDataState(
     val user: User? = null,
@@ -32,7 +32,10 @@ class HomeViewModel : ViewModel() {
                 val userRes = RetrofitClient.api.getUserById(bearer, userId)
                 val user = if (userRes.isSuccessful) userRes.body() else null
 
-                val bookingRes = RetrofitClient.api.getBookings(bearer, LocalDate.now().toString())
+                val bookingRes = if (role == "mechanic")
+                    RetrofitClient.api.getAvailableBookings(bearer)
+                else
+                    RetrofitClient.api.getBookings(bearer, LocalDate.now().toString())
                 val bookings = if (bookingRes.isSuccessful) bookingRes.body() else null
 
                 val issueRes = RetrofitClient.api.getIssues(bearer)
@@ -52,6 +55,9 @@ class HomeViewModel : ViewModel() {
                     emptyList()
                 }
 
+                val bookingsError = if (!bookingRes.isSuccessful)
+                    "Could not load bookings (${bookingRes.code()})" else null
+
                 _state.value = _state.value.copy(
                     user = user,
                     bookings = bookings,
@@ -59,6 +65,7 @@ class HomeViewModel : ViewModel() {
                     mechanicVisits = mechanicVisits,
                     adminUsers = adminUsers,
                     isLoading = false,
+                    error = bookingsError,
                 )
             } catch (_: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = "Failed to load server data")

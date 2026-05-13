@@ -213,12 +213,20 @@ fun IssuesListScreen(
                         }
                         
                         items(issues, key = { it.id }) { issue ->
+                            var showResolveDialog by remember { mutableStateOf(false) }
+                            if (showResolveDialog) {
+                                ResolveIssueDialog(
+                                    onDismiss = { showResolveDialog = false },
+                                    onConfirm = { notes ->
+                                        viewModel.resolveIssue(token, issue.id, notes)
+                                        showResolveDialog = false
+                                    }
+                                )
+                            }
                             IssueCard(
                                 issue = issue,
                                 isReadOnly = isReadOnly,
-                                onResolve = {
-                                    viewModel.resolveIssue(token, issue.id)
-                                },
+                                onResolve = { showResolveDialog = true },
                             )
                         }
                     }
@@ -307,6 +315,15 @@ private fun IssueCard(
                     }
                     Text(text = "•", fontSize = 12.sp, color = AppColors.TextHint)
                     Text(text = "Mech #${issue.mechanicId}", fontSize = 12.sp, color = AppColors.TextHint)
+                    if (issue.cost != null) {
+                        Text(text = "•", fontSize = 12.sp, color = AppColors.TextHint)
+                        Text(
+                            text = "R%.2f".format(issue.cost),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppColors.FontBlackMedium,
+                        )
+                    }
                 }
 
                 if (!isReadOnly && issue.resolved != true) {
@@ -319,8 +336,60 @@ private fun IssueCard(
                     }
                 }
             }
+
+            if (!issue.resolutionNotes.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AppColors.Green.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 7.dp)
+                ) {
+                    Text(
+                        text = "Resolution: ${issue.resolutionNotes}",
+                        fontSize = 12.sp,
+                        color = AppColors.Green,
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun ResolveIssueDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (notes: String?) -> Unit,
+) {
+    var notes by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Resolve Issue") },
+        text = {
+            Column {
+                Text("Add resolution notes (optional):", fontSize = 14.sp)
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("e.g. Replaced brake pads and bled brakes.") },
+                    minLines = 3,
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(notes.ifBlank { null }) },
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Green)
+            ) {
+                Text("Mark Resolved")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
 
 @Preview(showBackground = true, widthDp = 375, heightDp = 812)

@@ -4,13 +4,13 @@
 CREATE TABLE public.bookings (
   booking_id integer NOT NULL DEFAULT nextval('bookings_booking_id_seq'::regclass),
   client_id integer,
-  vehicle_id bigint,
+  truck_id bigint,
   booking_date date,
   booking_time character,
   client_notes character varying,
   CONSTRAINT bookings_pkey PRIMARY KEY (booking_id),
-  CONSTRAINT bookings_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.trucks(truck_id),
-  CONSTRAINT bookings_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(user_id)
+  CONSTRAINT bookings_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(user_id),
+  CONSTRAINT bookings_truck_id_fkey FOREIGN KEY (truck_id) REFERENCES public.trucks(truck_id)
 );
 CREATE TABLE public.clients (
   user_id integer NOT NULL DEFAULT nextval('clients_client_id_seq'::regclass),
@@ -35,6 +35,8 @@ CREATE TABLE public.issues (
   issue_description character varying,
   mechanic_id integer NOT NULL,
   issue_resolved boolean,
+  cost double precision,
+  issue_resolution_notes character varying,
   CONSTRAINT issues_pkey PRIMARY KEY (issue_id),
   CONSTRAINT fk_mechanic FOREIGN KEY (mechanic_id) REFERENCES public.users(user_id),
   CONSTRAINT issues_visit_id_fkey FOREIGN KEY (visit_id) REFERENCES public.visit(visit_id)
@@ -86,4 +88,11 @@ CREATE TABLE public.visit (
   CONSTRAINT fk_mechanic FOREIGN KEY (mechanic_id) REFERENCES public.mechanics(user_id),
   CONSTRAINT fk_truck FOREIGN KEY (truck_id) REFERENCES public.trucks(truck_id),
   CONSTRAINT visit_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(booking_id)
+);
+CREATE TABLE public.visit_mechanics (
+  visit_id integer NOT NULL,
+  mechanic_id integer NOT NULL,
+  CONSTRAINT visit_mechanics_pkey PRIMARY KEY (visit_id, mechanic_id),
+  CONSTRAINT fk_visit FOREIGN KEY (visit_id) REFERENCES public.visit(visit_id),
+  CONSTRAINT fk_mechanic FOREIGN KEY (mechanic_id) REFERENCES public.mechanics(user_id)
 );
