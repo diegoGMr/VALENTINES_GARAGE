@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.1"
+agp = "9.1.1"
 kotlin = "2.3.20"
 composeIcons = "1.1.1"
 coil = "2.7.0"

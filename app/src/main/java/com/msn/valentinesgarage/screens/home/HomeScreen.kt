@@ -9,6 +9,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.msn.valentinesgarage.screens.mechanic.MechanicVehiclesScreen
 import com.msn.valentinesgarage.screens.mechanic.viewmodels.MechanicVehiclesViewModel
 import com.msn.valentinesgarage.screens.client.ClientProgressScreen
 import com.msn.valentinesgarage.screens.client.viewmodels.ClientProgressViewModel
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
 
 enum class HomeBottomTab(
     val title: String,
@@ -112,6 +114,12 @@ fun HomeScreen(
         return
     }
 
+    ConfigureSystemBars(
+        statusBarColor = if (currentScreen == HomeScreenDestination.Dashboard) Color.Transparent else AppColors.White,
+        darkStatusBarIcons = currentScreen != HomeScreenDestination.Dashboard,
+        navigationBarColor = AppColors.White,
+    )
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = AppColors.White,
@@ -160,10 +168,7 @@ fun HomeScreen(
                     onRefresh = { homeViewModel.loadData(token, role, userId) },
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(
-                            top = innerPadding.calculateTopPadding(),
-                            bottom = innerPadding.calculateBottomPadding(),
-                        )
+                        .padding(bottom = innerPadding.calculateBottomPadding())
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),

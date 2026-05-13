@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,6 +17,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.screens.client.viewmodels.VehicleViewModel
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +30,8 @@ fun VehicleRegistrationScreen(
     viewModel: VehicleViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    ConfigureSystemBars(statusBarColor = AppColors.White)
 
     var plate by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
@@ -49,6 +52,7 @@ fun VehicleRegistrationScreen(
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.White)
+            .topSafeDrawingPadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

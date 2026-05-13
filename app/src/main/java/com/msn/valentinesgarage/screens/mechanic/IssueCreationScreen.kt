@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -40,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Camera
@@ -71,6 +72,8 @@ fun IssueCreationScreen(
     // Sample vehicle plates — replace with API response
     val availableVehicles = listOf("HSD343", "JKL918", "QTR552", "BRT001", "NMZ772")
 
+    ConfigureSystemBars(statusBarColor = AppColors.White)
+
     if (submissionSuccess) {
         IssueSubmissionSuccess(onCreateAnother = { submissionSuccess = false })
         return
@@ -80,7 +83,7 @@ fun IssueCreationScreen(
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.White)
-            .statusBarsPadding(),
+            .topSafeDrawingPadding(),
         contentPadding = PaddingValues(bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -367,7 +370,7 @@ private fun IssueSubmissionSuccess(onCreateAnother: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(AppColors.White)
-            .statusBarsPadding()
+            .topSafeDrawingPadding()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

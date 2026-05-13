@@ -45,6 +45,8 @@ import com.msn.valentinesgarage.screens.authentication.viewmodels.SignUpViewMode
 import com.msn.valentinesgarage.screens.dialog.DialogScreen
 import com.msn.valentinesgarage.screens.dialog.DialogType
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 
 @Composable
 fun SignUpScreen(
@@ -58,16 +60,10 @@ fun SignUpScreen(
     val phoneError = signUpViewModel.phoneError()
     val passwordError = signUpViewModel.passwordError()
     val confirmError = signUpViewModel.confirmPasswordError()
-    val termsError = if (uiState.hasSubmitted && !uiState.agreedToTerms) "Please agree to terms and conditions" else null
-
-    LaunchedEffect(uiState.token) {
-        val token = uiState.token
-        val id = uiState.userId
-        val role = uiState.role
-        if (token != null && id != null && role != null) {
-            // Give the user a moment to see the success dialog if we want,
-            // but the prompt says "automatically" so we navigate on dismiss below.
-        }
+    val termsError = if (uiState.hasSubmitted && !uiState.agreedToTerms) {
+        "Please agree to terms and conditions"
+    } else {
+        null
     }
 
     val showTermsScreen = remember { mutableStateOf(false) }
@@ -78,33 +74,35 @@ fun SignUpScreen(
             onAgree = {
                 signUpViewModel.onAgreedToTermsChanged(true)
                 showTermsScreen.value = false
-            },
+            }
         )
         return
     }
 
+    ConfigureSystemBars(statusBarColor = AppColors.Orange)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.Orange),
+            .background(AppColors.Orange)
+            .topSafeDrawingPadding()
     ) {
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(250.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = AppColors.White,
-                modifier = Modifier.size(50.dp),
+                modifier = Modifier.size(50.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(id = R.drawable.applogo),
                         contentDescription = "Brand Logo",
-                        modifier = Modifier.size(56.dp, 44.dp),
+                        modifier = Modifier.size(56.dp, 44.dp)
                     )
                 }
             }
@@ -113,9 +111,10 @@ fun SignUpScreen(
         Surface(
             color = AppColors.White,
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .fillMaxHeight(0.85f),
+                .fillMaxHeight(0.85f)
         ) {
             Column(
                 modifier = Modifier
@@ -123,7 +122,7 @@ fun SignUpScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 28.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
+                verticalArrangement = Arrangement.Top
             ) {
                 AuthScreenTitle(text = "Create your account")
                 Spacer(modifier = Modifier.height(40.dp))
@@ -134,7 +133,7 @@ fun SignUpScreen(
                     onFocusChanged = signUpViewModel::onFullNameFocusChanged,
                     placeholder = "Full name",
                     isError = fullNameError != null,
-                    errorText = fullNameError,
+                    errorText = fullNameError
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -146,7 +145,7 @@ fun SignUpScreen(
                     placeholder = "Email",
                     keyboardType = KeyboardType.Email,
                     isError = emailError != null,
-                    errorText = emailError,
+                    errorText = emailError
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -158,7 +157,7 @@ fun SignUpScreen(
                     placeholder = "Phone number (10 digits)",
                     keyboardType = KeyboardType.Phone,
                     isError = phoneError != null,
-                    errorText = phoneError,
+                    errorText = phoneError
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -170,7 +169,7 @@ fun SignUpScreen(
                     placeholder = "Password",
                     isPassword = true,
                     isError = passwordError != null,
-                    errorText = passwordError,
+                    errorText = passwordError
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -182,14 +181,14 @@ fun SignUpScreen(
                     placeholder = "Confirm Password",
                     isPassword = true,
                     isError = confirmError != null,
-                    errorText = confirmError,
+                    errorText = confirmError
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
                         checked = uiState.agreedToTerms,
@@ -197,15 +196,15 @@ fun SignUpScreen(
                         colors = CheckboxDefaults.colors(
                             checkedColor = AppColors.Orange,
                             uncheckedColor = AppColors.LightGray,
-                            checkmarkColor = AppColors.White,
-                        ),
+                            checkmarkColor = AppColors.White
+                        )
                     )
                     Text(
                         text = "I agree to Terms & Conditions",
                         fontSize = 13.sp,
                         color = AppColors.FontBlackMedium,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.clickable { showTermsScreen.value = true },
+                        modifier = Modifier.clickable { showTermsScreen.value = true }
                     )
                 }
 
@@ -216,7 +215,7 @@ fun SignUpScreen(
                         fontSize = 12.sp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 12.dp),
+                            .padding(start = 12.dp)
                     )
                 }
 
@@ -224,12 +223,12 @@ fun SignUpScreen(
 
                 AuthPrimaryButton(
                     text = if (uiState.isLoading) "SIGNING UP..." else "SIGNUP",
-                        isEnabled = !uiState.isLoading && signUpViewModel.isFormValid(),
+                    isEnabled = !uiState.isLoading && signUpViewModel.isFormValid(),
                     onClick = {
-                            if (!uiState.isLoading && signUpViewModel.isFormValid()) {
+                        if (!uiState.isLoading && signUpViewModel.isFormValid()) {
                             signUpViewModel.register()
                         }
-                    },
+                    }
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -238,11 +237,10 @@ fun SignUpScreen(
                     prompt = "Already have an account?  ",
                     linkText = "login",
                     onLinkClick = onLogin,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
         }
-
 
         uiState.activeDialog?.let { dialogType ->
             DialogScreen(
@@ -251,13 +249,13 @@ fun SignUpScreen(
                     val token = uiState.token
                     val id = uiState.userId
                     val role = uiState.role
-                    
+
                     signUpViewModel.dismissDialog()
                     if (dialogType is DialogType.Success && token != null && id != null && role != null) {
                         signUpViewModel.resetState()
                         onSignUpSuccess(token, id, role)
                     }
-                },
+                }
             )
         }
     }

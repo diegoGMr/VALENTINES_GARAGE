@@ -23,6 +23,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.data.models.MechanicVisit
 import com.msn.valentinesgarage.screens.mechanic.viewmodels.MechanicVehiclesViewModel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Car
@@ -66,6 +68,8 @@ fun MechanicVehiclesScreen(
         }
     }
 
+    ConfigureSystemBars(statusBarColor = AppColors.White)
+
     if (selectedVisitForIssue != null) {
         ReportIssueDialog(
             visit = selectedVisitForIssue!!,
@@ -89,6 +93,7 @@ fun MechanicVehiclesScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(AppColors.White)
+                    .topSafeDrawingPadding()
             ) {
                 LazyColumn(
                     modifier = Modifier

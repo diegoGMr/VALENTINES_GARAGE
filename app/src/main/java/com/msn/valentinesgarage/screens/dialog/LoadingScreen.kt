@@ -12,11 +12,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
 
 @Composable
 fun FullLoadingScreen(
     message: String = "Syncing with database..."
 ) {
+    ConfigureSystemBars(statusBarColor = Color.White)
+
     Box(
         modifier = Modifier
             .fillMaxSize()

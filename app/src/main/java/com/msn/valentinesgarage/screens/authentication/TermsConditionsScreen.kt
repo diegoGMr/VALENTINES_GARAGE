@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.msn.valentinesgarage.screens.authentication.composables.AuthPrimaryButton
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ChevronLeft
@@ -33,11 +34,13 @@ fun TermsConditionsScreen(
     onBack: () -> Unit,
     onAgree: () -> Unit,
 ) {
+    ConfigureSystemBars(statusBarColor = AppColors.White)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(AppColors.White)
-            .statusBarsPadding()
+            .topSafeDrawingPadding()
             .padding(horizontal = 20.dp, vertical = 18.dp)
             .verticalScroll(rememberScrollState()),
     ) {

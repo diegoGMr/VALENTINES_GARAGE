@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Bell
@@ -77,6 +78,7 @@ fun HomeHeaderBanner(
                 profileName = profileName,
                 modifier = Modifier
                     .align(Alignment.TopStart)
+                    .topSafeDrawingPadding()
                     .padding(start = 12.dp, top = 12.dp),
             )
         }

@@ -1,6 +1,25 @@
 import { db } from "../db.js";
 import { formatUsername } from "../helpers/usernameHelper.js";
 
+function serviceError(message, status, cause) {
+  const error = new Error(message);
+  error.status = status;
+  if (cause) {
+    error.cause = cause;
+  }
+  return error;
+}
+
+function isConnectivityError(error) {
+  const message = `${error?.message || ""} ${error?.cause?.message || ""}`.toLowerCase();
+  return (
+    message.includes("fetch failed") ||
+    message.includes("failed to fetch") ||
+    message.includes("networkerror") ||
+    error?.name === "FetchError"
+  );
+}
+
 export const userService = {
   async registerUser({ name, email, password, phone, role }) {
     const username = formatUsername(name);
@@ -38,18 +57,39 @@ export const userService = {
   },
 
   async loginUser({ email, password }) {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = typeof email === "string" ? email.trim() : "";
+    const trimmedPassword = typeof password === "string" ? password.trim() : "";
+
+    if (!trimmedEmail || !trimmedPassword) {
+      throw serviceError("Email and password are required", 400);
+    }
+
     console.log(`Attempting login for: [${trimmedEmail}]`);
 
-    // Use .ilike for case-insensitive search to be more flexible
-    const { data: users, error } = await db
-      .from("users")
-      .select("*")
-      .ilike("email", trimmedEmail);
+    let users = [];
+    try {
+      // Use .ilike for case-insensitive search to be more flexible
+      const response = await db
+        .from("users")
+        .select("*")
+        .ilike("email", trimmedEmail);
 
-    if (error) {
-      console.error("Supabase error during login:", error.message);
-      throw new Error("Database error");
+      users = response.data || [];
+
+      if (response.error) {
+        console.error("Supabase error during login:", response.error);
+        if (isConnectivityError(response.error)) {
+          throw serviceError("Supabase unavailable or misconfigured", 503, response.error);
+        }
+        throw serviceError("Database error", 500, response.error);
+      }
+    } catch (cause) {
+      if (cause?.status) {
+        throw cause;
+      }
+
+      console.error("Unexpected login failure:", cause);
+      throw serviceError("Supabase unavailable or misconfigured", 503, cause);
     }
 
     // Find the user by manual comparison to handle any subtle whitespace issues
@@ -57,15 +97,15 @@ export const userService = {
 
     if (!user) {
       console.log(`Login failed: No user found with email [${trimmedEmail}]. Total users found with similar email: ${users?.length || 0}`);
-      throw new Error("Invalid credentials");
+      throw serviceError("Invalid credentials", 401);
     }
 
     console.log(`User found: ${user.email}. Checking password...`);
     // Also trim password just in case
-    const isValid = (password.trim() === user.password?.trim());
+    const isValid = (trimmedPassword === user.password?.trim());
     if (!isValid) {
       console.log(`Login failed: Password mismatch for user ${trimmedEmail}`);
-      throw new Error("Invalid credentials");
+      throw serviceError("Invalid credentials", 401);
     }
 
     return {

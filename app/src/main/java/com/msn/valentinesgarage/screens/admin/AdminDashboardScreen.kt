@@ -1,7 +1,6 @@
 package com.msn.valentinesgarage.screens.admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,6 +25,8 @@ import com.msn.valentinesgarage.screens.admin.viewmodels.AdminDashboardViewModel
 import com.msn.valentinesgarage.screens.dialog.FullLoadingScreen
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.*
@@ -58,6 +59,8 @@ fun AdminDashboardScreen(
         FullLoadingScreen(message = "Loading Dashboard...")
         return
     }
+
+    ConfigureSystemBars(statusBarColor = AppColors.OrangeWhite)
 
     val stats = listOf(
         AdminStatUi(
@@ -95,7 +98,7 @@ fun AdminDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.OrangeWhite)
-                .statusBarsPadding(),
+                .topSafeDrawingPadding(),
             contentPadding = PaddingValues(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

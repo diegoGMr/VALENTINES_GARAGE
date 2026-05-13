@@ -22,9 +22,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.data.models.Issue
 import com.msn.valentinesgarage.screens.mechanic.viewmodels.IssuesViewModel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.Clock
 import compose.icons.fontawesomeicons.solid.ExclamationTriangle
 import compose.icons.fontawesomeicons.solid.Search
 import compose.icons.fontawesomeicons.solid.Truck
@@ -50,6 +51,8 @@ fun IssuesListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("All") }
 
+    ConfigureSystemBars(statusBarColor = AppColors.OrangeWhite)
+
     val filteredIssues = uiState.issues.filter { issue ->
         val matchesSearch = searchQuery.isBlank() ||
                 issue.description.contains(searchQuery, ignoreCase = true)
@@ -67,7 +70,7 @@ fun IssuesListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.OrangeWhite)
-                .statusBarsPadding(),
+                .topSafeDrawingPadding(),
         ) {
             // Header
             Row(

@@ -24,6 +24,10 @@ router.post("/registerUser", asyncHandler(async (req, res) => {
 
 router.post("/loginUser", asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password.trim()) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
   const result = await userService.loginUser({ email, password });
   res.json({ message: "Login successful", ...result });
 }));

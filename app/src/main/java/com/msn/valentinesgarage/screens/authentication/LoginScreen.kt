@@ -33,6 +33,8 @@ import com.msn.valentinesgarage.screens.authentication.composables.AuthTextField
 import com.msn.valentinesgarage.screens.authentication.viewmodels.LoginViewModel
 import com.msn.valentinesgarage.screens.dialog.DialogScreen
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 
 @Composable
 fun LoginScreen(
@@ -55,10 +57,13 @@ fun LoginScreen(
         }
     }
 
+    ConfigureSystemBars(statusBarColor = AppColors.Orange)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.Orange),
+            .background(AppColors.Orange)
+            .topSafeDrawingPadding()
     ) {
 
         Box(

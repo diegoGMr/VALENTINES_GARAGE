@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -25,6 +24,8 @@ import com.msn.valentinesgarage.screens.client.viewmodels.BookingViewModel
 import com.msn.valentinesgarage.screens.client.viewmodels.VehicleViewModel
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.*
@@ -103,6 +104,8 @@ fun AppointmentBookingScreen(
         }
     }
 
+    ConfigureSystemBars(statusBarColor = AppColors.White)
+
     // Map database bookings to UI slots
     val occupiedSlots = uiState.bookings.map { b ->
         TimeSlotUi(
@@ -148,7 +151,7 @@ fun AppointmentBookingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(AppColors.White)
-                    .statusBarsPadding(),
+                    .topSafeDrawingPadding(),
                 contentPadding = PaddingValues(bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -452,7 +455,7 @@ private fun BookingConfirmationView(
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.White)
-            .statusBarsPadding(),
+            .topSafeDrawingPadding(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

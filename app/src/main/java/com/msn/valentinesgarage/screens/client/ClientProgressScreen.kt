@@ -19,6 +19,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.msn.valentinesgarage.data.models.MechanicVisit
 import com.msn.valentinesgarage.screens.client.viewmodels.ClientProgressViewModel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Car
@@ -34,6 +36,8 @@ fun ClientProgressScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    ConfigureSystemBars(statusBarColor = AppColors.White)
+
     LaunchedEffect(token) {
         if (token.isNotEmpty()) {
             viewModel.loadProgress(token)
@@ -43,7 +47,10 @@ fun ClientProgressScreen(
     PullToRefreshBox(
         isRefreshing = uiState.isLoading,
         onRefresh = { viewModel.loadProgress(token) },
-        modifier = modifier.fillMaxSize().background(AppColors.White)
+        modifier = modifier
+            .fillMaxSize()
+            .background(AppColors.White)
+            .topSafeDrawingPadding()
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),

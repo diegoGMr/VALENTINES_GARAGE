@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,8 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Calendar
@@ -72,6 +72,8 @@ fun AppointmentsListScreen(
 
     var selectedTab by remember { mutableStateOf(AppointmentsTab.Upcoming) }
 
+    ConfigureSystemBars(statusBarColor = AppColors.White)
+
     // Sample data — replace with API response
     val allAppointments = listOf(
         AppointmentUi("a1", "20 April 2026", "09:00 AM", "HSD343", "Scania Railer", AppointmentStatus.Upcoming),
@@ -92,7 +94,7 @@ fun AppointmentsListScreen(
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.White)
-            .statusBarsPadding(),
+            .topSafeDrawingPadding(),
     ) {
         // Header
         Row(

@@ -40,6 +40,7 @@ import com.msn.valentinesgarage.screens.authentication.SignUpScreen
 import com.msn.valentinesgarage.screens.dialog.FullLoadingScreen
 import com.msn.valentinesgarage.screens.home.HomeScreen
 import com.msn.valentinesgarage.theme.AppColors
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
 import com.msn.valentinesgarage.theme.ValentinesGarageTheme
 import kotlinx.coroutines.delay
 
@@ -52,6 +53,8 @@ data class UserProfile(
 @Composable
 private fun LogoutAnimation(onAnimationEnd: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
+
+    ConfigureSystemBars(statusBarColor = AppColors.Orange)
 
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,

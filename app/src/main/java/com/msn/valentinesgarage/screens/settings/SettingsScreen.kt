@@ -37,6 +37,8 @@ import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.data.models.User
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.screens.settings.composables.ProfileCard
+import com.msn.valentinesgarage.theme.ConfigureSystemBars
+import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ChevronLeft
@@ -57,8 +59,11 @@ fun SettingsScreen(
     val textSizes = listOf("Small", "Medium", "Large")
     val languages = listOf("English")
 
+    ConfigureSystemBars(statusBarColor = Color.White)
+
     LazyColumn(
         modifier = modifier
+            .topSafeDrawingPadding()
             .padding(horizontal = 16.dp, vertical = 16.dp)
             .background(color = Color.White)
             .fillMaxSize(),
