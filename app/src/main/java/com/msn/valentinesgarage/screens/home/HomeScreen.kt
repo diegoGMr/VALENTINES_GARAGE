@@ -27,6 +27,7 @@ import com.msn.valentinesgarage.screens.home.composables.HomeHeaderBanner
 import com.msn.valentinesgarage.screens.home.composables.HomeVehicleTaskCard
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.screens.mechanic.IssuesListScreen
+import com.msn.valentinesgarage.screens.mechanic.MechanicServiceHistoryScreen
 import com.msn.valentinesgarage.screens.settings.SettingsScreen
 import com.msn.valentinesgarage.theme.AppColors
 import compose.icons.FontAwesomeIcons
@@ -34,6 +35,7 @@ import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Book
 import compose.icons.fontawesomeicons.solid.Car
 import compose.icons.fontawesomeicons.solid.Cog
+import compose.icons.fontawesomeicons.solid.History
 import compose.icons.fontawesomeicons.solid.Home
 import compose.icons.fontawesomeicons.solid.Tasks
 import compose.icons.fontawesomeicons.solid.User
@@ -52,6 +54,7 @@ enum class HomeBottomTab(
     Booking(title = "Booking", icon = FontAwesomeIcons.Solid.Book),
     Progress(title = "Progress", icon = FontAwesomeIcons.Solid.Tasks),
     Issues(title = "Issues", icon = FontAwesomeIcons.Solid.Tasks),
+    ServiceHistory(title = "History", icon = FontAwesomeIcons.Solid.History),
     Admin(title = "Admin", icon = FontAwesomeIcons.Solid.User),
     Settings(title = "Settings", icon = FontAwesomeIcons.Solid.Cog),
 }
@@ -66,6 +69,7 @@ private enum class HomeScreenDestination {
     Settings,
     Admin,
     AdminHistory,
+    MechanicServiceHistory,
 }
 
 @Composable
@@ -100,6 +104,7 @@ fun HomeScreen(
             if (role != "mechanic") add(HomeBottomTab.Booking)
             if (role == "client") add(HomeBottomTab.Progress)
             if (role != "client") add(HomeBottomTab.Issues)
+            if (role == "mechanic") add(HomeBottomTab.ServiceHistory)
             if (role == "admin") add(HomeBottomTab.Admin)
             add(HomeBottomTab.Settings)
         }
@@ -138,6 +143,7 @@ fun HomeScreen(
                                 HomeBottomTab.Booking -> HomeScreenDestination.Booking
                                 HomeBottomTab.Progress -> HomeScreenDestination.Progress
                                 HomeBottomTab.Issues -> HomeScreenDestination.Issues
+                                HomeBottomTab.ServiceHistory -> HomeScreenDestination.MechanicServiceHistory
                                 HomeBottomTab.Settings -> HomeScreenDestination.Settings
                                 HomeBottomTab.Admin -> HomeScreenDestination.Admin
                             }
@@ -318,9 +324,23 @@ fun HomeScreen(
             HomeScreenDestination.Vehicles -> {
                 MechanicVehiclesScreen(
                     token = token,
+                    onOpenServiceHistory = { currentScreen = HomeScreenDestination.MechanicServiceHistory },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = innerPadding.calculateBottomPadding()),
+                )
+            }
+
+            HomeScreenDestination.MechanicServiceHistory -> {
+                MechanicServiceHistoryScreen(
+                    token = token,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = innerPadding.calculateBottomPadding()),
+                    onBack = {
+                        selectedTab = HomeBottomTab.Vehicles
+                        currentScreen = HomeScreenDestination.Vehicles
+                    },
                 )
             }
 

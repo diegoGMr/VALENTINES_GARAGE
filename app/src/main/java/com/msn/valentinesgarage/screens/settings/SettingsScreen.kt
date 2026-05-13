@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +38,7 @@ import com.msn.valentinesgarage.R
 import com.msn.valentinesgarage.data.models.User
 import com.msn.valentinesgarage.screens.home.composables.SectionLabel
 import com.msn.valentinesgarage.screens.settings.composables.ProfileCard
+import com.msn.valentinesgarage.theme.AppColors
 import com.msn.valentinesgarage.theme.ConfigureSystemBars
 import com.msn.valentinesgarage.theme.topSafeDrawingPadding
 import compose.icons.FontAwesomeIcons
@@ -76,27 +78,20 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
-                    imageVector = FontAwesomeIcons.Solid.ChevronLeft,
-                    contentDescription = "Back icon",
-                    tint = Color.Black,
-                    modifier = Modifier.size(16.dp),
+                    imageVector = FontAwesomeIcons.Solid.Cog,
+                    contentDescription = null,
+                    tint = AppColors.Orange,
+                    modifier = Modifier.size(20.dp),
                 )
-
                 Text(
                     text = "Settings",
-                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    color = AppColors.FontBlackStrong,
                     fontSize = 20.sp,
-                )
-
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.Cog,
-                    contentDescription = "Settings icon",
-                    tint = Color.Black,
-                    modifier = Modifier.size(16.dp),
                 )
             }
         }

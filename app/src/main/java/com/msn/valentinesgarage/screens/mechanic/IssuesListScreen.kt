@@ -88,7 +88,7 @@ fun IssuesListScreen(
                         imageVector = FontAwesomeIcons.Solid.ExclamationTriangle,
                         contentDescription = null,
                         tint = AppColors.Orange,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                     Text(
                         text = "Issues",

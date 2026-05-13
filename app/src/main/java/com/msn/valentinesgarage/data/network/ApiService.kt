@@ -109,6 +109,11 @@ interface ApiService {
         @Header("Authorization") token: String,
     ): Response<List<MechanicVisit>>
 
+    @GET("mechanic/service-history")
+    suspend fun getMechanicServiceHistory(
+        @Header("Authorization") token: String,
+    ): Response<List<MechanicVisit>>
+
     @GET("visits/active")
     suspend fun getActiveVisits(
         @Header("Authorization") token: String,

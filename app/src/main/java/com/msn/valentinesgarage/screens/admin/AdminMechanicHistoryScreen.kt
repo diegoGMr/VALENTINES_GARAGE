@@ -98,6 +98,12 @@ fun AdminMechanicHistoryScreen(
                                     tint = AppColors.FontBlackStrong,
                                 )
                             }
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ClipboardList,
+                                contentDescription = null,
+                                tint = AppColors.Orange,
+                                modifier = Modifier.size(20.dp),
+                            )
                             Column {
                                 Text(
                                     text = "Mechanic Full History",

@@ -110,8 +110,14 @@ fun AdminDashboardScreen(
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp, top = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Cog,
+                        contentDescription = null,
+                        tint = AppColors.Orange,
+                        modifier = Modifier.size(20.dp),
+                    )
                     Column {
                         Text(
                             text = "Admin Dashboard",
@@ -125,12 +131,6 @@ fun AdminDashboardScreen(
                             color = AppColors.TextHint,
                         )
                     }
-                    Icon(
-                        imageVector = FontAwesomeIcons.Solid.Cog,
-                        contentDescription = "Settings",
-                        tint = AppColors.FontBlackSoft,
-                        modifier = Modifier.size(18.dp),
-                    )
                 }
             }
 

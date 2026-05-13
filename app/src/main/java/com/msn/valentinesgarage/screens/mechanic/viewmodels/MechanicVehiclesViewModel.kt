@@ -48,6 +48,7 @@ class MechanicVehiclesViewModel : ViewModel() {
                 )
                 if (res.isSuccessful) {
                     _uiState.update { it.copy(isLoading = false, issueCreated = true) }
+                    loadAssignedVehicles(token)
                 } else {
                     _uiState.update { it.copy(isLoading = false, error = "Failed to report issue") }
                 }

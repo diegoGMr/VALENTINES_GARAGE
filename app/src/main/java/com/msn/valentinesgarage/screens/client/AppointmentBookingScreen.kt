@@ -196,7 +196,7 @@ fun AppointmentBookingScreen(
                             imageVector = FontAwesomeIcons.Solid.Calendar,
                             contentDescription = null,
                             tint = AppColors.Orange,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(20.dp),
                         )
                         Text(
                             text = "Book Appointment",

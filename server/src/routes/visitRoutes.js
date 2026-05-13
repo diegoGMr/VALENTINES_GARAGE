@@ -144,6 +144,42 @@ router.get("/my-visits", auth, requireRole(ROLE.MECHANIC, ROLE.ADMIN), asyncHand
   res.json(data);
 }));
 
+router.get("/mechanic/service-history", auth, requireRole(ROLE.MECHANIC), asyncHandler(async (req, res) => {
+  const mechanicId = req.user.userId;
+
+  const { data: junctionRows, error: vmError } = await db
+    .from("visit_mechanics")
+    .select("visit_id")
+    .eq("mechanic_id", mechanicId);
+  if (vmError) throw vmError;
+
+  const { data: legacyRows, error: legacyError } = await db
+    .from("visit")
+    .select("visit_id")
+    .eq("mechanic_id", mechanicId);
+  if (legacyError) throw legacyError;
+
+  const visitIds = Array.from(
+    new Set([
+      ...(junctionRows || []).map((row) => row.visit_id),
+      ...(legacyRows || []).map((row) => row.visit_id),
+    ])
+  );
+
+  if (visitIds.length === 0) {
+    return res.json([]);
+  }
+
+  const { data, error } = await db
+    .from("visit")
+    .select("*, trucks!fk_truck(*, speciality_trucks(name)), clients!fk_client(*), issues(*), visit_mechanics(mechanic_id), completed_trucks(visit_id)")
+    .in("visit_id", visitIds)
+    .order("visit_id", { ascending: false });
+
+  if (error) throw error;
+  res.json(data || []);
+}));
+
 router.get("/admin/stats", auth, requireRole(ROLE.ADMIN), asyncHandler(async (_req, res) => {
     const stats = await adminService.getStats();
     res.json(stats);

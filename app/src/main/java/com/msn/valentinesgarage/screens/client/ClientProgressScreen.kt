@@ -63,7 +63,7 @@ fun ClientProgressScreen(
                         FontAwesomeIcons.Solid.Tasks,
                         contentDescription = null,
                         tint = AppColors.Orange,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(

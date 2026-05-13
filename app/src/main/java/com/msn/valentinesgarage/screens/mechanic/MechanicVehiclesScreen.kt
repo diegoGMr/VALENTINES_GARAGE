@@ -37,6 +37,7 @@ import kotlinx.coroutines.delay
 fun MechanicVehiclesScreen(
     token: String,
     modifier: Modifier = Modifier,
+    onOpenServiceHistory: () -> Unit = {},
     viewModel: MechanicVehiclesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -65,6 +66,13 @@ fun MechanicVehiclesScreen(
         if (showCompletionOverlay) {
             delay(2200)
             showCompletionOverlay = false
+        }
+    }
+
+    LaunchedEffect(uiState.issueCreated) {
+        if (uiState.issueCreated) {
+            snackbarHostState.showSnackbar("Issue reported and tracker updated")
+            viewModel.resetIssueCreated()
         }
     }
 
@@ -103,20 +111,35 @@ fun MechanicVehiclesScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                FontAwesomeIcons.Solid.Tools,
-                                contentDescription = null,
-                                tint = AppColors.Orange,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Active Vehicles",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AppColors.FontBlackStrong
-                            )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    FontAwesomeIcons.Solid.Tools,
+                                    contentDescription = null,
+                                    tint = AppColors.Orange,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "Active Vehicles",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppColors.FontBlackStrong
+                                )
+                            }
+
+                            TextButton(onClick = onOpenServiceHistory) {
+                                Text(
+                                    text = "Service History",
+                                    color = AppColors.Orange,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp,
+                                )
+                            }
                         }
                     }
 
@@ -273,6 +296,7 @@ fun MechanicVehicleCard(
 
             if (visit.issues.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
+                val resolvedCount = visit.issues.count { it.resolved == true }
                 val pendingCount = visit.issues.count { it.resolved != true }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -287,6 +311,23 @@ fun MechanicVehicleCard(
                         fontSize = 12.sp,
                         color = if (pendingCount == 0) AppColors.Green else AppColors.Orange,
                         fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "Tracker: ${visit.issues.size} reported • $resolvedCount resolved • $pendingCount pending",
+                    fontSize = 11.sp,
+                    color = AppColors.TextHint,
+                )
+
+                visit.issues.take(2).forEach { issue ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "• ${issue.description}",
+                        fontSize = 11.sp,
+                        color = AppColors.FontBlackSoft,
+                        maxLines = 1,
                     )
                 }
             }
